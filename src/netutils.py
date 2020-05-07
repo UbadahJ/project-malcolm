@@ -13,10 +13,10 @@ def get_ip() -> str:
     return IP
 
 
-def check_sock(host, port) -> bool:
+def check_sock(ip: str, port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
-            sock.bind((host, port))
+            sock.bind((ip, port))
         except:
             return False
         else:
