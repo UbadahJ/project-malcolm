@@ -49,7 +49,7 @@ def verify(args):
     # Verify number of ports equal the number of servers
     assert args.number == len(args.ports)
     for port in args.ports:
-        assert netutils.check_sock(netutils.get_ip(), port)
+        assert netutils.check_sock(netutils.get_local_ip(), port)
     # Verify a valid file was passed
     assert pathlib.Path(args.file).is_file()
     return args
