@@ -1,7 +1,5 @@
 #! /bin/python3
 
-# TODO: Replace asserts with Exceptions
-
 import pathlib
 import argparse
 import netutils
@@ -46,15 +44,24 @@ def parse_args():
 
 
 def verify(args):
-    # Verify number of ports equal the number of servers
-    assert args.number == len(args.ports)
-    for port in args.ports:
-        assert netutils.check_sock(netutils.get_local_ip(), port)
-    # Verify a valid file was passed
-    assert pathlib.Path(args.file).is_file()
-    return args
-
+    try:
+        # Verify number of ports equal the number of servers
+        print('Validating server count ... ', end='')
+        assert args.number == len(args.ports)
+        print('OK')
+        print('Validating server ports ... ')
+        for port in args.ports:
+            print('\t{} ... '.format(port), end='')
+            assert netutils.check_sock(netutils.get_local_ip(), port)
+            print('OK')
+        # Verify a valid file was passed
+        print('Validating file ... ', end='')
+        assert pathlib.Path(args.file).is_file()
+        print('OK')
+        return args
+    except AssertionError:
+        print('FAILED')
+        quit(1)
 
 if __name__ == "__main__":
     args = verify(parse_args())
-

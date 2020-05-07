@@ -53,15 +53,23 @@ def parse_args():
     return parser.parse_args()
 
 def verify(args):
-    ip = args.address.split('.')
-    # Check if IP has 4 decimal point
-    assert len(ip) == 4
-    # Check if any of them is empty
-    for ad in ip:
-        assert len(ad) != 0
-    # Verify if the path given is valid directory
-    assert pathlib.Path(args.output).is_dir()
-    return args
+    try:
+        print('Validating IP Address ... ', end='')
+        ip = args.address.split('.')
+        # Check if IP has 4 decimal point
+        assert len(ip) == 4
+        # Check if any of them is empty
+        for ad in ip:
+            assert len(ad) != 0
+        print('OK')
+        # Verify if the path given is valid directory
+        print('Validating directory ... ', end='')
+        assert pathlib.Path(args.output).is_dir()
+        print('OK')
+        return args
+    except AssertionError:
+        print('FAILED')
+        quit(1)
 
 if __name__ == "__main__":
     args = verify(parse_args())
