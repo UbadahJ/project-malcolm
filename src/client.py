@@ -1,7 +1,9 @@
 #! /bin/python3
 
-import argparse
+# TODO: Replace asserts with Exceptions
 
+import pathlib
+import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -44,13 +46,22 @@ def parse_args():
         "-r",
         "--resume",
         help="Flag that tells the client whether to resume the existing download in progress",
-        type=bool,
+        action='store_true',
         default=False,
         dest="resume",
     )
     return parser.parse_args()
 
+def verify(args):
+    ip = args.address.split('.')
+    # Check if IP has 4 decimal point
+    assert len(ip) == 4
+    # Check if any of them is empty
+    for ad in ip:
+        assert len(ad) != 0
+    # Verify if the path given is valid directory
+    assert pathlib.Path(args.output).is_dir()
+    return args
 
 if __name__ == "__main__":
-    args = parse_args()
-
+    args = verify(parse_args())
