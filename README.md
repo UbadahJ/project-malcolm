@@ -2,6 +2,13 @@
 
 *Authors: Ubadah Jafry, Hamza Ijaz*
 
+## Overview
+
+Project Malcolm is divided into two parts:
+
+* A multi-threaded client that can download from multiple servers
+* A server that start virtual servers that listen on multiple ports
+
 # Working
 
 The whole system works in the following manner
