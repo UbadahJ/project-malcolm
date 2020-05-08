@@ -1,9 +1,11 @@
 #! /bin/python3
 
+import fileutils
 import consoleutils as con
 import pathlib
 import argparse
 import netutils
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -45,7 +47,7 @@ def parse_args():
         "-c",
         "--color-printing",
         help="Enables color printing in the console",
-        action='store_true',
+        action="store_true",
         default=False,
         dest="colors",
     )
@@ -56,22 +58,36 @@ def verify(args):
     con.pretty_printing = args.colors
     try:
         # Verify number of ports equal the number of servers
-        print('Validating server count ... ', end='')
+        print("Validating server count ... ", end="")
         assert args.number == len(args.ports)
-        con.success('OK')
-        print('Validating server ports ... ')
+        con.success("OK")
+        print("Validating server ports ... ")
         for port in args.ports:
-            print('\t{} ... '.format(port), end='')
+            print("\t{} ... ".format(port), end="")
             assert netutils.check_sock(netutils.get_local_ip(), port)
-            con.success('OK')
+            con.success("OK")
         # Verify a valid file was passed
-        print('Validating file ... ', end='')
+        print("Validating file ... ", end="")
         assert pathlib.Path(args.file).is_file()
-        con.success('OK')
+        con.success("OK")
         return args
     except AssertionError:
-        con.error('FAILED')
+        con.error("FAILED")
         quit(1)
+
+
+def init(args):
+    con.clear()
+    con.box_print("Project Malcolm")
+    print("Local IP Address:", netutils.get_local_ip())
+    print("Public IP Address:", netutils.get_public_ip())
+    print("File size:", fileutils.get_size(args.file), "Bytes")
+    print("Checksum:", fileutils.gen_checksum(args.file))
+    print()
+    print("Press any key to start servers")
+    con.getch()
+
 
 if __name__ == "__main__":
     args = verify(parse_args())
+    init(args)
