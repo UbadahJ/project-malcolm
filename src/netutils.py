@@ -1,3 +1,5 @@
+import platform
+import subprocess
 import socket
 import json
 import struct
@@ -21,6 +23,12 @@ def get_public_ip() -> str:
         return json.loads(urlopen("https://api.myip.com").read())["ip"]
     except:
         return ""
+
+
+def ping(url: str) -> bool:
+    param = "-n" if platform.system().lower() == "windows" else "-c"
+    command = ["ping", param, "1", url]
+    return subprocess.call(command) == 0
 
 
 def check_sock(ip: str, port: int) -> bool:
@@ -57,4 +65,3 @@ def add_parameter(param: str) -> bytearray:
 def parse_parameter(soc: socket.socket):
     size = recv_bytes(soc, 4)
     return recv_bytes(soc, struct.unpack("I", size)[0])
-

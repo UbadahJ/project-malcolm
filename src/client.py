@@ -1,5 +1,6 @@
 #! /bin/python3
 
+import netutils
 import consoleutils as con
 import pathlib
 import argparse
@@ -69,6 +70,7 @@ def verify(args):
         # Check if any of them is empty
         for ad in ip:
             assert len(ad) != 0
+        assert netutils.ping(args.address)
         con.success('OK')
         # Verify if the path given is valid directory
         print('Validating directory ... ', end='')
