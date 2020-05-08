@@ -32,10 +32,11 @@ Executable file that launches multiple virtual servers and display there status 
 
 ### Arguments
 
-* `-i --interval` Time interval in seconds between server status reporting in seconds
-* `-n --number`   Total number of virtual server
-* `-f --file`     Path to the file (either absolute or relative)
-* `-p --port`     List of ports that must be equal to number of virtual servers
+* `-i --interval`         Time interval in seconds between server status reporting in seconds
+* `-n --number`           Total number of virtual server
+* `-f --file`             Path to the file (either absolute or relative)
+* `-p --port`             List of ports that must be equal to number of virtual servers
+* `-c --color-printing`   Enables color printing in the console
 
 ### Examples
 
@@ -70,17 +71,18 @@ Executable file that launches a client that can connect to multiple servers that
 
 ### Arguments
 
-* `-i --interval` Time interval in seconds between server status reporting in seconds
-* `-o --output`   Path to the output directory (either absolute or relative)
-* `-a --address`  The ip address of the server
-* `-p --port`     List of ports that must be equal to number of virtual servers
-* `-r --resume`   Flag that tells the client whether to resume the existing download in progress
+* `-i --interval`         Time interval in seconds between server status reporting in seconds
+* `-o --output`           Path to the output directory (either absolute or relative)
+* `-a --address`          The ip address of the server
+* `-p --port`             List of ports that must be equal to number of virtual servers
+* `-r --resume`           Flag that tells the client whether to resume the existing download in progress
+* `-c --color-printing`   Enables color printing in the console
 
 ### Examples
 
 ```console
 $ ./client.py --help
-usage: client.py [-h] -i INTERVAL -o OUTPUT -a ADDRESS -p [PORT [PORT ...]] [-r RESUME]
+usage: client.py [-h] -i INTERVAL -o OUTPUT -a ADDRESS -p [PORT [PORT ...]] [-r] [-c]
 
 Launches a client that can connect to multiple servers that includes error handling and file verification
 
@@ -94,8 +96,8 @@ optional arguments:
                         The ip address of the server
   -p [PORT [PORT ...]], --port [PORT [PORT ...]]
                         List of ports that must be equal to number of virtual servers
-  -r RESUME, --resume RESUME
-                        Flag that tells the client whether to resume the existing download in progress
+  -r, --resume          Flag that tells the client whether to resume the existing download in progress
+  -c, --color-printing  Enables color printing in the console
 ```
 
 ```console

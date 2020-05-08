@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>doc.md</title>
+<title>README.md</title>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 
 <style>
@@ -227,84 +227,101 @@ pre code {
 </style>
 
 <style>
-/**
- * GitHub Gist Theme
- * Author : Anthony Attard - https://github.com/AnthonyAttard
- * Author : Louis Barranqueiro - https://github.com/LouisBarranqueiro
- */
+/*
+
+Atom One Light by Daniel Gamage
+Original One Light Syntax theme from https://github.com/atom/one-light-syntax
+
+base:    #fafafa
+mono-1:  #383a42
+mono-2:  #686b77
+mono-3:  #a0a1a7
+hue-1:   #0184bb
+hue-2:   #4078f2
+hue-3:   #a626a4
+hue-4:   #50a14f
+hue-5:   #e45649
+hue-5-2: #c91243
+hue-6:   #986801
+hue-6-2: #c18401
+
+*/
 
 .hljs {
   display: block;
-  background: white;
-  padding: 0.5em;
-  color: #333333;
   overflow-x: auto;
+  padding: 0.5em;
+  color: #383a42;
+  background: #fafafa;
 }
 
 .hljs-comment,
-.hljs-meta {
-  color: #969896;
-}
-
-.hljs-variable,
-.hljs-template-variable,
-.hljs-strong,
-.hljs-emphasis,
 .hljs-quote {
-  color: #df5000;
+  color: #a0a1a7;
+  font-style: italic;
 }
 
+.hljs-doctag,
 .hljs-keyword,
-.hljs-selector-tag,
-.hljs-type {
-  color: #d73a49;
-}
-
-.hljs-literal,
-.hljs-symbol,
-.hljs-bullet,
-.hljs-attribute {
-  color: #0086b3;
+.hljs-formula {
+  color: #a626a4;
 }
 
 .hljs-section,
-.hljs-name {
-  color: #63a35c;
+.hljs-name,
+.hljs-selector-tag,
+.hljs-deletion,
+.hljs-subst {
+  color: #e45649;
 }
 
-.hljs-tag {
-  color: #333333;
+.hljs-literal {
+  color: #0184bb;
 }
 
-.hljs-title,
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta-string {
+  color: #50a14f;
+}
+
+.hljs-built_in,
+.hljs-class .hljs-title {
+  color: #c18401;
+}
+
 .hljs-attr,
-.hljs-selector-id,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
 .hljs-selector-class,
 .hljs-selector-attr,
-.hljs-selector-pseudo {
-  color: #6f42c1;
+.hljs-selector-pseudo,
+.hljs-number {
+  color: #986801;
 }
 
-.hljs-addition {
-  color: #55a532;
-  background-color: #eaffea;
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-title {
+  color: #4078f2;
 }
 
-.hljs-deletion {
-  color: #bd2c00;
-  background-color: #ffecec;
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
 }
 
 .hljs-link {
   text-decoration: underline;
-}
-
-.hljs-number {
-  color: #005cc5;
-}
-
-.hljs-string {
-  color: #032f62;
 }
 
 </style>
@@ -374,6 +391,12 @@ code {
   </script>
 <h1 id="project-malcolm">Project Malcolm</h1>
 <p><em>Authors: Ubadah Jafry, Hamza Ijaz</em></p>
+<h2 id="overview">Overview</h2>
+<p>Project Malcolm is divided into two parts:</p>
+<ul>
+<li>A multi-threaded client that can download from multiple servers</li>
+<li>A server that start virtual servers that listen on multiple ports</li>
+</ul>
 <h1 id="working">Working</h1>
 <p>The whole system works in the following manner</p>
 <ul>
@@ -393,63 +416,65 @@ code {
 <p>Executable file that launches multiple virtual servers and display there status after certain interval</p>
 <h3 id="arguments">Arguments</h3>
 <ul>
-<li><code>-i --interval</code> Time interval in seconds between server status reporting in seconds</li>
-<li><code>-n --number</code>   Total number of virtual server</li>
-<li><code>-f --file</code>     Path to the file (either absolute or relative)</li>
-<li><code>-p --port</code>     List of ports that must be equal to number of virtual servers</li>
+<li><code>-i --interval</code>         Time interval in seconds between server status reporting in seconds</li>
+<li><code>-n --number</code>           Total number of virtual server</li>
+<li><code>-f --file</code>             Path to the file (either absolute or relative)</li>
+<li><code>-p --port</code>             List of ports that must be equal to number of virtual servers</li>
+<li><code>-c --color-printing</code>   Enables color printing in the console</li>
 </ul>
 <h3 id="examples">Examples</h3>
-<pre class="hljs"><code><div> ./server.py --<span class="hljs-built_in">help</span>
+<pre class="hljs"><code><div><span class="hljs-meta">$</span><span class="bash"> ./server.py --<span class="hljs-built_in">help</span></span>
 usage: server.py [-h] -i INTERVAL -n NUMBER -f FILE -p [PORT [PORT ...]]
 
 Launches multiple virtual servers and display there status after certain interval
 
 optional arguments:
-  -h, --<span class="hljs-built_in">help</span>            show this <span class="hljs-built_in">help</span> message and <span class="hljs-built_in">exit</span>
+  -h, --help            show this help message and exit
   -i INTERVAL, --interval INTERVAL
-                        Time interval <span class="hljs-keyword">in</span> seconds between server status reporting <span class="hljs-keyword">in</span> seconds
+                        Time interval in seconds between server status reporting in seconds
   -n NUMBER, --number NUMBER
                         Total number of virtual server
   -f FILE, --file FILE  Path to the file (either absolute or relative)
   -p [PORT [PORT ...]], --port [PORT [PORT ...]]
                         List of ports that must be equal to number of virtual servers
 </div></code></pre>
-<pre class="hljs"><code><div>./server.py -f data.mp4 -n 4 -i 1 -p 10001 10002 10003 10004
+<pre class="hljs"><code><div><span class="hljs-meta">$</span><span class="bash"> ./server.py -f data.mp4 -n 4 -i 1 -p 10001 10002 10003 10004</span>
 </div></code></pre>
-<pre class="hljs"><code><div>python server.py --file data.mp4 --number 4 --interval 1 --port 10001 10002 10003 10004
+<pre class="hljs"><code><div><span class="hljs-meta">$</span><span class="bash"> python server.py --file data.mp4 --number 4 --interval 1 --port 10001 10002 10003 10004</span>
 </div></code></pre>
 <h2 id="clientpy"><code>client.py</code></h2>
 <p>Executable file that launches a client that can connect to multiple servers that includes error handling and file verification</p>
 <h3 id="arguments">Arguments</h3>
 <ul>
-<li><code>-i --interval</code> Time interval in seconds between server status reporting in seconds</li>
-<li><code>-o --output</code>   Path to the output directory (either absolute or relative)</li>
-<li><code>-a --address</code>  The ip address of the server</li>
-<li><code>-p --port</code>     List of ports that must be equal to number of virtual servers</li>
-<li><code>-r --resume</code>   Flag that tells the client whether to resume the existing download in progress</li>
+<li><code>-i --interval</code>         Time interval in seconds between server status reporting in seconds</li>
+<li><code>-o --output</code>           Path to the output directory (either absolute or relative)</li>
+<li><code>-a --address</code>          The ip address of the server</li>
+<li><code>-p --port</code>             List of ports that must be equal to number of virtual servers</li>
+<li><code>-r --resume</code>           Flag that tells the client whether to resume the existing download in progress</li>
+<li><code>-c --color-printing</code>   Enables color printing in the console</li>
 </ul>
 <h3 id="examples">Examples</h3>
-<pre class="hljs"><code><div>./client.py -h
-usage: client.py [-h] -i INTERVAL -o OUTPUT -a ADDRESS -p [PORT [PORT ...]] [-r RESUME]
+<pre class="hljs"><code><div><span class="hljs-meta">$</span><span class="bash"> ./client.py --<span class="hljs-built_in">help</span></span>
+usage: client.py [-h] -i INTERVAL -o OUTPUT -a ADDRESS -p [PORT [PORT ...]] [-r] [-c]
 
 Launches a client that can connect to multiple servers that includes error handling and file verification
 
 optional arguments:
-  -h, --<span class="hljs-built_in">help</span>            show this <span class="hljs-built_in">help</span> message and <span class="hljs-built_in">exit</span>
+  -h, --help            show this help message and exit
   -i INTERVAL, --interval INTERVAL
-                        Time interval <span class="hljs-keyword">in</span> seconds between server status reporting <span class="hljs-keyword">in</span> seconds
+                        Time interval in seconds between server status reporting in seconds
   -o OUTPUT, --output OUTPUT
                         Path to the output directory (either absolute or relative)
   -a ADDRESS, --address ADDRESS
                         The ip address of the server
   -p [PORT [PORT ...]], --port [PORT [PORT ...]]
                         List of ports that must be equal to number of virtual servers
-  -r RESUME, --resume RESUME
-                        Flag that tells the client whether to resume the existing download <span class="hljs-keyword">in</span> progress
+  -r, --resume          Flag that tells the client whether to resume the existing download in progress
+  -c, --color-printing  Enables color printing in the console
 </div></code></pre>
-<pre class="hljs"><code><div>./client.py -o . -a 127.0.0.1 -i 1 -r -p 10001 10002 10003 10004
+<pre class="hljs"><code><div><span class="hljs-meta">$</span><span class="bash"> ./client.py -o . -a 127.0.0.1 -i 1 -r -p 10001 10002 10003 10004</span>
 </div></code></pre>
-<pre class="hljs"><code><div>python client.py --output . --address 127.0.0.1 --interval 1 --resume --port 10001 10002 10003 10004
+<pre class="hljs"><code><div><span class="hljs-meta">$</span><span class="bash"> python client.py --output . --address 127.0.0.1 --interval 1 --resume --port 10001 10002 10003 10004</span>
 </div></code></pre>
 
 </body>

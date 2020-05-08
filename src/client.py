@@ -1,7 +1,6 @@
 #! /bin/python3
 
-# TODO: Replace asserts with Exceptions
-
+import consoleutils as con
 import pathlib
 import argparse
 
@@ -50,9 +49,18 @@ def parse_args():
         default=False,
         dest="resume",
     )
+    parser.add_argument(
+        "-c",
+        "--color-printing",
+        help="Enables color printing in the console",
+        action='store_true',
+        default=False,
+        dest="colors",
+    )
     return parser.parse_args()
 
 def verify(args):
+    con.pretty_printing = args.colors
     try:
         print('Validating IP Address ... ', end='')
         ip = args.address.split('.')
@@ -61,14 +69,14 @@ def verify(args):
         # Check if any of them is empty
         for ad in ip:
             assert len(ad) != 0
-        print('OK')
+        con.success('OK')
         # Verify if the path given is valid directory
         print('Validating directory ... ', end='')
         assert pathlib.Path(args.output).is_dir()
-        print('OK')
+        con.success('OK')
         return args
     except AssertionError:
-        print('FAILED')
+        con.error('FAILED')
         quit(1)
 
 if __name__ == "__main__":

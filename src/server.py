@@ -1,5 +1,6 @@
 #! /bin/python3
 
+import consoleutils as con
 import pathlib
 import argparse
 import netutils
@@ -40,27 +41,36 @@ def parse_args():
         required=True,
         dest="ports",
     )
+    parser.add_argument(
+        "-c",
+        "--color-printing",
+        help="Enables color printing in the console",
+        action='store_true',
+        default=False,
+        dest="colors",
+    )
     return parser.parse_args()
 
 
 def verify(args):
+    con.pretty_printing = args.colors
     try:
         # Verify number of ports equal the number of servers
         print('Validating server count ... ', end='')
         assert args.number == len(args.ports)
-        print('OK')
+        con.success('OK')
         print('Validating server ports ... ')
         for port in args.ports:
             print('\t{} ... '.format(port), end='')
             assert netutils.check_sock(netutils.get_local_ip(), port)
-            print('OK')
+            con.success('OK')
         # Verify a valid file was passed
         print('Validating file ... ', end='')
         assert pathlib.Path(args.file).is_file()
-        print('OK')
+        con.success('OK')
         return args
     except AssertionError:
-        print('FAILED')
+        con.error('FAILED')
         quit(1)
 
 if __name__ == "__main__":
