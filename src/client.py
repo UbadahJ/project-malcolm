@@ -5,6 +5,7 @@ import consoleutils as con
 import pathlib
 import argparse
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Launches a client that can connect to multiple servers that includes error handling and file verification"
@@ -46,7 +47,7 @@ def parse_args():
         "-r",
         "--resume",
         help="Flag that tells the client whether to resume the existing download in progress",
-        action='store_true',
+        action="store_true",
         default=False,
         dest="resume",
     )
@@ -54,32 +55,46 @@ def parse_args():
         "-c",
         "--color-printing",
         help="Enables color printing in the console",
-        action='store_true',
+        action="store_true",
         default=False,
         dest="colors",
     )
     return parser.parse_args()
 
+
 def verify(args):
     con.pretty_printing = args.colors
     try:
-        print('Validating IP Address ... ', end='')
-        ip = args.address.split('.')
+        print("Validating IP Address ... ", end="")
+        ip = args.address.split(".")
         # Check if IP has 4 decimal point
         assert len(ip) == 4
         # Check if any of them is empty
         for ad in ip:
             assert len(ad) != 0
         assert netutils.ping(args.address)
-        con.success('OK')
+        con.success("OK")
         # Verify if the path given is valid directory
-        print('Validating directory ... ', end='')
+        print("Validating directory ... ", end="")
         assert pathlib.Path(args.output).is_dir()
-        con.success('OK')
+        con.success("OK")
         return args
     except AssertionError:
-        con.error('FAILED')
+        con.error("FAILED")
         quit(1)
+
+
+def init(args):
+    con.clear()
+    con.box_print("Project Malcolm")
+    print("Local IP Address:", netutils.get_local_ip())
+    print("Public IP Address:", netutils.get_public_ip())
+    print("Server IP Address:", args.address)
+    print()
+    print("Press any key to continue")
+    con.getch()
+
 
 if __name__ == "__main__":
     args = verify(parse_args())
+    init(args)
