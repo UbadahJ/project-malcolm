@@ -1,5 +1,6 @@
 import socket
 import json
+import struct
 from urllib.request import urlopen
 
 
@@ -17,7 +18,7 @@ def get_local_ip() -> str:
 
 def get_public_ip() -> str:
     try:
-        return json.loads(urlopen("https://api.myip.com").read())['ip']
+        return json.loads(urlopen("https://api.myip.com").read())["ip"]
     except:
         return ""
 
@@ -47,3 +48,13 @@ def recv_bytes(soc: socket.socket, bytes: int) -> bytearray:
             return None
         data.extend(packet)
     return data
+
+
+def add_parameter(param: str) -> bytearray:
+    return struct.pack("i", len(str)) + param.encode("utf-8")
+
+
+def parse_parameter(soc: socket.socket):
+    size = recv_bytes(soc, 4)
+    return recv_bytes(soc, struct.unpack("I", size)[0])
+
