@@ -1,11 +1,14 @@
 #! /bin/python3
 
 import argparse
+import multiprocessing as mp
 import pathlib
+import time
 
 import consoleutils as con
 import fileutils
 import netutils
+from virserver import Server
 
 
 def parse_args() -> argparse.Namespace:
@@ -92,3 +95,22 @@ def init(args: argparse.Namespace):
 if __name__ == "__main__":
     args = verify(parse_args())
     init(args)
+
+    procs = []
+    for port in args.ports:
+        queue = mp.Queue()
+        process = mp.Process(target=Server, args=(args.file,),
+                             kwargs={'id': int(port), 'interval': args.interval, 'port': int(port), 'queue': queue})
+        process.start()
+        procs.append((process, queue))
+
+    while True:
+        try:
+            for process, queue in procs:
+                print(queue.get())
+                time.sleep(args.interval)
+        except KeyboardInterrupt:
+            for process, queue in procs:
+                process.close()
+        finally:
+            break
