@@ -3,6 +3,7 @@ import platform
 import socket
 import struct
 import subprocess
+from typing import Union
 from urllib.request import urlopen
 
 
@@ -32,7 +33,7 @@ def ping(url: str) -> bool:
 
 
 def check_sock(ip: str, port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    with socket.socket() as sock:
         try:
             sock.bind((ip, port))
         except:
@@ -41,14 +42,17 @@ def check_sock(ip: str, port: int) -> bool:
             return True
 
 
-def create_conn(ip: str, port: int) -> socket.socket:
-    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    soc.bind((ip, port))
-    soc.listen(1)
+def create_server_connection(ip: str, port: int) -> socket.socket:
+    return socket.create_server((ip, port))
+
+
+def create_connection(ip: str, port: int) -> socket.socket:
+    soc = socket.socket()
+    soc.connect((ip, port))
     return soc
 
 
-def recv_bytes(soc: socket.socket, bytes: int) -> bytearray:
+def recv_bytes(soc: socket.socket, bytes: int) -> Union[bytearray, None]:
     data = bytearray()
     while len(data) < bytes:
         packet = soc.recv(bytes - len(data))
@@ -58,8 +62,8 @@ def recv_bytes(soc: socket.socket, bytes: int) -> bytearray:
     return data
 
 
-def add_parameter(param: str) -> bytearray:
-    return struct.pack("i", len(str)) + param.encode("utf-8")
+def add_parameter(param: str) -> bytes:
+    return struct.pack("i", len(param)) + param.encode("utf-8")
 
 
 def parse_parameter(soc: socket.socket):

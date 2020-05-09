@@ -21,13 +21,18 @@ class Client:
         self.address = args.address
         self.ports = args.port
         self.resume = args.resume
+        self.conns = None
+        self.checks = None
 
         self.on_create()  # Show launch message to user
         self.generate_connections()  # Generate connections using netutils
         asyncio.run(self.get_checksum())  # Get the checksum of the files
 
     def generate_connections(self):
-        self.conns = [netutils.create_conn(self.address, port) for port in self.ports]
+        self.conns = [
+            netutils.create_connection(self.address, port)
+            for port in self.ports
+        ]
 
     async def get_checksum(self):
         self.checks = await asyncio.gather(
