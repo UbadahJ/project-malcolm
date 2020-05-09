@@ -1,9 +1,10 @@
 #! /bin/python3
 
-import netutils
-import consoleutils as con
-import pathlib
 import argparse
+import pathlib
+
+import consoleutils as con
+import netutils
 from virclient import Client
 
 

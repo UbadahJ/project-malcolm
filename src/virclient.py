@@ -1,7 +1,7 @@
-import multiprocessing as mp
 import asyncio
-import consoleutils as con
 import socket
+
+import consoleutils as con
 import netutils
 
 

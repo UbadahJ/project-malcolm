@@ -66,6 +66,7 @@ def getch():
         _var_getch = _find_getch()
     _var_getch()
 
+
 def info(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
     if pretty_printing:
         print(

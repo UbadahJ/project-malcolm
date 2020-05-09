@@ -1,6 +1,6 @@
-from typing import List
-from hashlib import sha1
 import os
+from hashlib import sha1
+from typing import List
 
 
 def spilt(file: str, parts: int) -> List[int]:

@@ -1,9 +1,10 @@
 #! /bin/python3
 
-import fileutils
-import consoleutils as con
-import pathlib
 import argparse
+import pathlib
+
+import consoleutils as con
+import fileutils
 import netutils
 
 

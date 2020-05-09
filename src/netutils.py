@@ -1,8 +1,8 @@
-import platform
-import subprocess
-import socket
 import json
+import platform
+import socket
 import struct
+import subprocess
 from urllib.request import urlopen
 
 
