@@ -4,6 +4,7 @@ import netutils
 import consoleutils as con
 import pathlib
 import argparse
+from virclient import Client
 
 
 def parse_args():
@@ -84,17 +85,6 @@ def verify(args):
         quit(1)
 
 
-def init(args):
-    con.clear()
-    con.box_print("Project Malcolm")
-    print("Local IP Address:", netutils.get_local_ip())
-    print("Public IP Address:", netutils.get_public_ip())
-    print("Server IP Address:", args.address)
-    print()
-    print("Press any key to continue")
-    con.getch()
-
-
 if __name__ == "__main__":
     args = verify(parse_args())
-    init(args)
+    Client(args)
