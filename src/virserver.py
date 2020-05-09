@@ -1,7 +1,13 @@
 from enum import Enum
+import netutils
 
 Status = Enum(
-    "Status", {"IDLE": "idle", "PROCESSING": "processing", "QUITING": "quiting"}
+    "Status", {"IDLE":      "idle",
+               "CHECKSUM":  "checksum",
+               "FILE_SIZE": "file_size",
+               "TRANSFER":  "transfer",
+               "QUITING":   "quiting"
+               }
 )
 
 
@@ -12,8 +18,16 @@ class Server:
         self.interval = interval
         self.port = port
         self.status = Status.IDLE
+        soc = netutils.create_server_connection(netutils.get_local_ip(), self.port)
         while self.status != Status.QUITING:
-            pass
+            if self.status == Status.IDLE:
+                pass
+            if self.status == Status.CHECKSUM:
+                pass
+            if self.status == Status.FILE_SIZE:
+                pass
+            if self.status == Status.TRANSFER:
+                pass
 
     def update(self):
         print("Server {} at port {}: Status {}".format(self.id, self.port, self.status))
