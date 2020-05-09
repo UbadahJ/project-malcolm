@@ -2,6 +2,9 @@ import platform
 import subprocess
 import sys
 from enum import Enum
+from typing import Any
+from typing import Callable
+from typing import TextIO
 
 pretty_printing = False
 enable_debugging = True
@@ -11,31 +14,31 @@ _var_getch = None
 Colors = Enum(
     "Colors",
     {
-        "ERROR": "\033[0;31m",
+        "ERROR":   "\033[0;31m",
         "WARNING": "\033[0;33m",
-        "DEBUG": "\033[0;37m",
-        "INFO": "\033[0;34m",
+        "DEBUG":   "\033[0;37m",
+        "INFO":    "\033[0;34m",
         "SUCCESS": "\033[0;32m",
         "DEFAULT": "\033[0m",
     },
 )
 
 
-def box_print(*objects, chr="*", sep=" ", file=sys.stdout, flush=False):
+def box_print(*objects: Any, chr: str = "*", sep: str = " ", file: TextIO = sys.stdout, flush: bool = False) -> None:
     size = len(sep.join([chr, *objects, chr]))
     print(chr * size)
     print(chr, *objects, chr, sep=sep, file=file, flush=flush)
     print(chr * size)
 
 
-def clear():
+def clear() -> None:
     if platform.system() == "Windows":
         subprocess.Popen("cls", shell=True).communicate()
     else:
         print("\033c", end="")
 
 
-def _find_getch():
+def _find_getch() -> Callable:
     try:
         import termios
     except ImportError:
@@ -49,25 +52,28 @@ def _find_getch():
 
     def _getch():
         fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
         try:
+            old_settings = termios.tcgetattr(fd)
             tty.setraw(fd)
             ch = sys.stdin.read(1)
-        finally:
+        except:
+            warning("Failed to get a getch() configuration, falling back to input()")
+            return input()
+        else:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
 
     return _getch
 
 
-def getch():
+def getch() -> str:
     global _var_getch
     if _var_getch is None:
         _var_getch = _find_getch()
-    _var_getch()
+    return _var_getch()
 
 
-def info(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
+def info(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
     if pretty_printing:
         print(
             Colors.INFO.value,
@@ -82,7 +88,7 @@ def info(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
         print(*objects, sep=sep, end=end, file=file, flush=flush)
 
 
-def debug(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
+def debug(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
     if enable_debugging:
         if pretty_printing:
             print(
@@ -98,7 +104,7 @@ def debug(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
             print(*objects, sep=sep, end=end, file=file, flush=flush)
 
 
-def success(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
+def success(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
     if pretty_printing:
         print(
             Colors.SUCCESS.value,
@@ -113,7 +119,7 @@ def success(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
         print(*objects, sep=sep, end=end, file=file, flush=flush)
 
 
-def warning(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
+def warning(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
     if pretty_printing:
         print(
             Colors.WARNING.value,
@@ -128,7 +134,7 @@ def warning(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
         print(*objects, sep=sep, end=end, file=file, flush=flush)
 
 
-def error(*objects, sep=" ", end="\n", file=sys.stdout, flush=False):
+def error(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
     if pretty_printing:
         print(
             Colors.ERROR.value,

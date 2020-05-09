@@ -8,7 +8,7 @@ import fileutils
 import netutils
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Launches multiple virtual servers and display there status after certain interval"
     )
@@ -55,7 +55,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def verify(args):
+def verify(args: argparse.Namespace):
     con.pretty_printing = args.colors
     try:
         # Verify number of ports equal the number of servers
@@ -77,7 +77,7 @@ def verify(args):
         quit(1)
 
 
-def init(args):
+def init(args: argparse.Namespace):
     con.clear()
     con.box_print("Project Malcolm")
     print("Local IP Address:", netutils.get_local_ip())

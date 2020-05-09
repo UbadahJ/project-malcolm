@@ -3,7 +3,7 @@ import platform
 import socket
 import struct
 import subprocess
-from typing import Union
+from typing import Optional
 from urllib.request import urlopen
 
 
@@ -11,12 +11,12 @@ def get_local_ip() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("10.255.255.255", 1))
-        IP = s.getsockname()[0]
+        ip = s.getsockname()[0]
     except:
-        IP = "127.0.0.1"
+        ip = "127.0.0.1"
     finally:
         s.close()
-    return IP
+    return ip
 
 
 def get_public_ip() -> str:
@@ -52,7 +52,7 @@ def create_connection(ip: str, port: int) -> socket.socket:
     return soc
 
 
-def recv_bytes(soc: socket.socket, bytes: int) -> Union[bytearray, None]:
+def recv_bytes(soc: socket.socket, bytes: int) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < bytes:
         packet = soc.recv(bytes - len(data))

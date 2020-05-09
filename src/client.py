@@ -8,9 +8,10 @@ import netutils
 from virclient import Client
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Launches a client that can connect to multiple servers that includes error handling and file verification"
+        description="Launches a client that can connect to multiple servers that includes error handling and file "
+                    "verification"
     )
     parser.add_argument(
         "-i",
@@ -64,7 +65,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def verify(args):
+def verify(args: argparse.Namespace):
     con.pretty_printing = args.colors
     try:
         print("Validating IP Address ... ", end="")
