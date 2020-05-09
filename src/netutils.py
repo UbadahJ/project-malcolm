@@ -66,6 +66,10 @@ def add_parameter(param: str) -> bytes:
     return struct.pack("i", len(param)) + param.encode("utf-8")
 
 
-def parse_parameter(soc: socket.socket):
+def parse_parameter(soc: socket.socket) -> Optional[bytearray]:
     size = recv_bytes(soc, 4)
     return recv_bytes(soc, struct.unpack("I", size)[0])
+
+
+def send_parameter(soc: socket.socket, param: str) -> None:
+    soc.sendall(add_parameter(param))

@@ -1,5 +1,6 @@
 from enum import Enum
 import netutils
+import fileutils
 
 Status = Enum(
     "Status", {"IDLE":      "idle",
@@ -20,13 +21,15 @@ class Server:
         self.status = Status.IDLE
         soc = netutils.create_server_connection(netutils.get_local_ip(), self.port)
         while self.status != Status.QUITING:
-            if self.status == Status.IDLE:
-                pass
+            soc.listen()
+            self.status = netutils.parse_parameter(soc)
             if self.status == Status.CHECKSUM:
+                netutils.send_parameter(soc, fileutils.gen_checksum(self.file))
+            elif self.status == Status.FILE_SIZE:
                 pass
-            if self.status == Status.FILE_SIZE:
+            elif self.status == Status.TRANSFER:
                 pass
-            if self.status == Status.TRANSFER:
+            else:
                 pass
 
     def update(self):
