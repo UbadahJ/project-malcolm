@@ -4,6 +4,7 @@ import socket
 import consoleutils as con
 import netutils
 
+from typing import Iterable
 
 class Client:
     def on_create(self):
@@ -16,11 +17,11 @@ class Client:
         print("Press any key to continue")
         con.getch()
 
-    def __init__(self, args):
-        self.output = args.output
-        self.address = args.address
-        self.ports = args.port
-        self.resume = args.resume
+    def __init__(self, address: str, ports: Iterable[str], output: str, resume: bool):
+        self.output = output
+        self.address = address
+        self.ports = ports
+        self.resume = resume
         self.conns = None
         self.checks = None
 
@@ -30,7 +31,7 @@ class Client:
 
     def generate_connections(self):
         self.conns = [
-            netutils.create_connection(self.address, port)
+            netutils.create_connection(self.address, int(port))
             for port in self.ports
         ]
 
