@@ -89,4 +89,4 @@ def verify(args: argparse.Namespace):
 
 if __name__ == "__main__":
     args = verify(parse_args())
-    Client(args.output, args.address, args.port, args.resume)
+    Client(address=args.address, output=args.output, ports=args.port, resume=args.resume)
