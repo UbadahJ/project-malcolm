@@ -5,9 +5,7 @@ import multiprocessing as mp
 import pathlib
 import time
 
-import consoleutils as con
-import fileutils
-import netutils
+from utils import console as con, file, network
 from virserver import Server
 
 
@@ -68,7 +66,7 @@ def verify(args: argparse.Namespace):
         print("Validating server ports ... ")
         for port in args.ports:
             print("\t{} ... ".format(port), end="")
-            assert netutils.check_sock(netutils.get_local_ip(), port)
+            assert network.check_sock(network.get_local_ip(), port)
             con.success("OK")
         # Verify a valid file was passed
         print("Validating file ... ", end="")
@@ -83,10 +81,10 @@ def verify(args: argparse.Namespace):
 def init(args: argparse.Namespace):
     con.clear()
     con.box_print("Project Malcolm")
-    print("Local IP Address:", netutils.get_local_ip())
-    print("Public IP Address:", netutils.get_public_ip())
-    print("File size:", fileutils.get_size(args.file), "Bytes")
-    print("Checksum:", fileutils.gen_checksum(args.file))
+    print("Local IP Address:", network.get_local_ip())
+    print("Public IP Address:", network.get_public_ip())
+    print("File size:", file.get_size(args.file), "Bytes")
+    print("Checksum:", file.gen_checksum(args.file))
     print()
     print("Press any key to start servers")
     con.getch()

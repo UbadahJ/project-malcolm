@@ -1,9 +1,8 @@
-import netutils
-import fileutils
 from multiprocessing import Queue
 from queue import Empty
 
-from netutils import Status
+from utils import network
+from utils.network import Status
 
 
 class Server:
@@ -15,15 +14,15 @@ class Server:
         self.status = Status.IDLE
         self.queue = queue
 
-        with netutils.create_server_connection(netutils.get_local_ip(), self.port) as soc:
+        with network.create_server_connection(network.get_local_ip(), self.port) as soc:
             soc.listen()
             while self.status != Status.QUITING:
                 if soc:
                     c_soc, addr = soc.accept()
-                    self.status = Status(netutils.parse_parameter(c_soc).decode("utf-8"))
+                    self.status = Status(network.parse_parameter(c_soc).decode("utf-8"))
                     self.update()
                     if self.status == Status.CHECKSUM:
-                        netutils.send_parameter(c_soc, fileutils.gen_checksum(self.file))
+                        network.send_parameter(c_soc, file.gen_checksum(self.file))
                     elif self.status == Status.FILE_SIZE:
                         pass
                     elif self.status == Status.TRANSFER:

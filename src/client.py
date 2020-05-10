@@ -3,8 +3,7 @@
 import argparse
 import pathlib
 
-import consoleutils as con
-import netutils
+from utils import console as con, network
 from virclient import Client
 
 
@@ -75,7 +74,7 @@ def verify(args: argparse.Namespace):
         # Check if any of them is empty
         for ad in ip:
             assert len(ad) != 0
-        assert netutils.ping(args.address)
+        assert network.ping(args.address)
         con.success("OK")
         # Verify if the path given is valid directory
         print("Validating directory ... ", end="")
