@@ -41,7 +41,7 @@ class Client:
     async def get_checksum(self):
         async def _get(soc: socket.socket) -> str:
             netutils.send_parameter(soc, Status.CHECKSUM.value)
-            return netutils.parse_parameter(soc).decode('utf-8')
+            return netutils.parse_parameter(soc)
         self.checks = await asyncio.gather(
             *(_get(soc) for soc in self.conns)
         )

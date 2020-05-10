@@ -10,15 +10,13 @@ from urllib.request import urlopen
 
 
 def get_local_ip() -> str:
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("10.255.255.255", 1))
-        ip = s.getsockname()[0]
-    except:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        try:
+            s.connect(("10.255.255.255", 1))
+            ip = s.getsockname()[0]
+        except:
+            ip = "127.0.0.1"
+        return ip
 
 
 def get_public_ip() -> str:
@@ -49,18 +47,18 @@ def create_server_connection(ip: str, port: int) -> socket.socket:
 
 
 def create_connection(ip: str, port: int) -> socket.socket:
-    soc = socket.socket()
-    soc.connect((ip, port))
-    return soc
+    with socket.socket() as soc:
+        soc.connect((ip, port))
+        return soc
 
 
-def recv_bytes(soc: socket.socket, bytes: int, ignoreConnection: bool = True) -> Optional[bytearray]:
+def recv_bytes(soc: socket.socket, bytes: int, wait: bool = True) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < bytes:
         try:
             packet = soc.recv(bytes - len(data))
         except OSError as e:
-            if ignoreConnection:
+            if wait:
                 sleep(1)
                 continue
             else:
@@ -75,9 +73,9 @@ def add_parameter(param: str) -> bytes:
     return struct.pack("I", len(param)) + param.encode("utf-8")
 
 
-def parse_parameter(soc: socket.socket) -> Optional[bytearray]:
+def parse_parameter(soc: socket.socket) -> str:
     size = recv_bytes(soc, 4)
-    return recv_bytes(soc, struct.unpack("I", size)[0])
+    return recv_bytes(soc, struct.unpack("I", size)[0]).decode('utf-8')
 
 
 def send_parameter(soc: socket.socket, param: str) -> None:
