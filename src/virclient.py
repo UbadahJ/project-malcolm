@@ -3,8 +3,10 @@ import socket
 
 import consoleutils as con
 import netutils
+from netutils import Status
 
-from typing import Iterable
+from typing import Iterable, Optional
+
 
 class Client:
     def on_create(self):
@@ -17,7 +19,7 @@ class Client:
         print("Press any key to continue")
         con.getch()
 
-    def __init__(self, address: str, ports: Iterable[str], output: str, resume: bool):
+    def __init__(self, *, address: str, ports: Iterable[str], output: str, resume: bool):
         self.output = output
         self.address = address
         self.ports = ports
@@ -28,6 +30,7 @@ class Client:
         self.on_create()  # Show launch message to user
         self.generate_connections()  # Generate connections using netutils
         asyncio.run(self.get_checksum())  # Get the checksum of the files
+        print(self.checks)
 
     def generate_connections(self):
         self.conns = [
@@ -36,8 +39,11 @@ class Client:
         ]
 
     async def get_checksum(self):
+        async def _get(soc: socket.socket) -> str:
+            netutils.send_parameter(soc, Status.CHECKSUM.value)
+            return netutils.parse_parameter(soc).decode('utf-8')
         self.checks = await asyncio.gather(
-            *(netutils.parse_parameter(soc) for soc in self.conns)
+            *(_get(soc) for soc in self.conns)
         )
 
 

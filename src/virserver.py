@@ -1,17 +1,9 @@
-from enum import Enum
 import netutils
 import fileutils
 from multiprocessing import Queue
 from queue import Empty
 
-Status = Enum(
-    "Status", {"IDLE":      "idle",
-               "CHECKSUM":  "checksum",
-               "FILE_SIZE": "file_size",
-               "TRANSFER":  "transfer",
-               "QUITING":   "quiting"
-               }
-)
+from netutils import Status
 
 
 class Server:
@@ -24,18 +16,20 @@ class Server:
         self.queue = queue
 
         with netutils.create_server_connection(netutils.get_local_ip(), self.port) as soc:
+            soc.listen()
             while self.status != Status.QUITING:
-                soc.listen()
-                self.status = netutils.parse_parameter(soc)
-                self.update()
-                if self.status == Status.CHECKSUM:
-                    netutils.send_parameter(soc, fileutils.gen_checksum(self.file))
-                elif self.status == Status.FILE_SIZE:
-                    pass
-                elif self.status == Status.TRANSFER:
-                    pass
-                else:
-                    pass
+                if soc:
+                    c_soc, addr = soc.accept()
+                    self.status = Status(netutils.parse_parameter(c_soc).decode("utf-8"))
+                    self.update()
+                    if self.status == Status.CHECKSUM:
+                        netutils.send_parameter(c_soc, fileutils.gen_checksum(self.file))
+                    elif self.status == Status.FILE_SIZE:
+                        pass
+                    elif self.status == Status.TRANSFER:
+                        pass
+                    else:
+                        pass
 
     def update(self):
         try:

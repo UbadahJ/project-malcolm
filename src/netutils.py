@@ -3,6 +3,8 @@ import platform
 import socket
 import struct
 import subprocess
+from enum import Enum
+from time import sleep
 from typing import Optional
 from urllib.request import urlopen
 
@@ -52,10 +54,17 @@ def create_connection(ip: str, port: int) -> socket.socket:
     return soc
 
 
-def recv_bytes(soc: socket.socket, bytes: int) -> Optional[bytearray]:
+def recv_bytes(soc: socket.socket, bytes: int, ignoreConnection: bool = True) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < bytes:
-        packet = soc.recv(bytes - len(data))
+        try:
+            packet = soc.recv(bytes - len(data))
+        except OSError as e:
+            if ignoreConnection:
+                sleep(1)
+                continue
+            else:
+                raise e
         if not packet:
             return None
         data.extend(packet)
@@ -63,7 +72,7 @@ def recv_bytes(soc: socket.socket, bytes: int) -> Optional[bytearray]:
 
 
 def add_parameter(param: str) -> bytes:
-    return struct.pack("i", len(param)) + param.encode("utf-8")
+    return struct.pack("I", len(param)) + param.encode("utf-8")
 
 
 def parse_parameter(soc: socket.socket) -> Optional[bytearray]:
@@ -73,3 +82,13 @@ def parse_parameter(soc: socket.socket) -> Optional[bytearray]:
 
 def send_parameter(soc: socket.socket, param: str) -> None:
     soc.sendall(add_parameter(param))
+
+
+Status = Enum(
+    "Status", {"IDLE":      "idle",
+               "CHECKSUM":  "checksum",
+               "FILE_SIZE": "file_size",
+               "TRANSFER":  "transfer",
+               "QUITING":   "quiting"
+               }
+)
