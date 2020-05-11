@@ -1,29 +1,12 @@
 import platform
 import subprocess
-import sys
-from enum import Enum
 from typing import Any
 from typing import Callable
-from typing import TextIO
 
 pretty_printing = False
 enable_debugging = True
 
 _var_getch = None
-
-try:
-    import rich
-except ImportError:
-    import utils.fallbackconsole as c
-else:
-    import utils.richconsole as c
-finally:
-    _print = c.print
-    _info = c.info
-    _debug = c.debug
-    _success = c.success
-    _warning = c.warning
-    _error = c.error
 
 
 def box_print(*objects: Any, chr: str = "*", sep: str = " ") -> None:
@@ -73,6 +56,33 @@ def getch() -> str:
     if _var_getch is None:
         _var_getch = _find_getch()
     return _var_getch()
+
+
+def show_error_msg(exception: Exception):
+    c.print('Failed to load rich library for formatting, falling back to built-in console formatting')
+    c.print('Install pip install -user rich')
+    c.print('To get better terminal support')
+    c.error(exception)
+    c.print()
+    c.print('Press any key to continue')
+    getch()
+
+
+try:
+    from rich.console import Console
+except ImportError as ie:
+    import utils.fallbackconsole as c
+
+    show_error_msg(ie)
+else:
+    import utils.richconsole as c
+finally:
+    _print = c.print
+    _info = c.info
+    _debug = c.debug
+    _success = c.success
+    _warning = c.warning
+    _error = c.error
 
 
 def print(*objects: Any, sep: str = " ", end: str = "\n", style: str = None):
