@@ -16,7 +16,7 @@ def get_local_ip() -> str:
             ip = s.getsockname()[0]
         except:
             ip = "127.0.0.1"
-        return ip
+    return ip
 
 
 def get_public_ip() -> str:
@@ -47,9 +47,9 @@ def create_server_connection(ip: str, port: int) -> socket.socket:
 
 
 def create_connection(ip: str, port: int) -> socket.socket:
-    with socket.socket() as soc:
-        soc.connect((ip, port))
-        return soc
+    soc = socket.socket()
+    soc.connect((ip, port))
+    return soc
 
 
 def recv_bytes(soc: socket.socket, bytes: int, wait: bool = True) -> Optional[bytearray]:
