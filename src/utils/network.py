@@ -83,5 +83,5 @@ def send_parameter(soc: socket.socket, param: str) -> None:
 
 
 class Request(Enum):
-    CHECKSUM, FILE_SIZE, TRANSFER = range(3)
+    CHECKSUM, FILE_SIZE, TRANSFER = (str(i) for i in range(3))
 

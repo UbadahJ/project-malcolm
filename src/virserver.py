@@ -39,4 +39,4 @@ class Server:
             while True:
                 self.queue.get_nowait()
         except Empty:
-            self.queue.put("Server {} at port {}: Status {}".format(self.id, self.port, self.status))
+            self.queue.put("Server {} at port {}: Status {}".format(self.id, self.port, self.request))
