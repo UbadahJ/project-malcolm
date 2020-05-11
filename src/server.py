@@ -2,6 +2,7 @@
 
 import argparse
 import multiprocessing as mp
+from queue import Empty
 import pathlib
 import time
 
@@ -102,13 +103,22 @@ if __name__ == "__main__":
         process.start()
         procs.append((process, queue))
 
+    status = ["" for i in procs]
     while True:
         try:
-            for process, queue in procs:
-                print(queue.get())
-                time.sleep(args.interval)
-        except KeyboardInterrupt:
+            for i, (process, queue) in enumerate(procs):
+                con.clear()
+                try:
+                    status[i] = queue.get_nowait()
+                    con.debug(locals())
+                except Empty:
+                    pass
+                print(status[i])
+        except KeyboardInterrupt as e:
             for process, queue in procs:
                 process.close()
-        finally:
             break
+        except Exception as e:
+            con.error(e)
+        else:
+            time.sleep(args.interval)
