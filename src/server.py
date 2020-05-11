@@ -109,12 +109,11 @@ if __name__ == "__main__":
 
     status = ["" for i in procs]
     while True:
+        con.clear()
         try:
             for i, (process, queue) in enumerate(procs):
-                con.clear()
                 try:
                     status[i] = queue.get_nowait()
-                    con.debug(locals())
                 except Empty:
                     pass
                 print(status[i])
