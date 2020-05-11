@@ -7,6 +7,7 @@ import pathlib
 import time
 
 from utils import console as con, file, network
+from utils.console import print
 from virserver import Server
 
 

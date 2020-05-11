@@ -4,7 +4,7 @@ from typing import Iterable
 
 from utils import console as con, network
 from utils.network import Request
-
+from utils.console import print
 
 class Client:
     def on_create(self):

@@ -4,7 +4,7 @@ from queue import Empty
 from utils import file
 from utils import network
 from utils.network import Request
-
+from utils.console import print
 
 class Server:
     def __init__(self, src, *, id: int, interval: int, port: int, queue: Queue):

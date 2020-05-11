@@ -4,6 +4,7 @@ import argparse
 import pathlib
 
 from utils import console as con, network
+from utils.console import print
 from virclient import Client
 
 

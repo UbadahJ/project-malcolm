@@ -11,23 +11,25 @@ enable_debugging = True
 
 _var_getch = None
 
-Colors = Enum(
-    "Colors",
-    {
-        "ERROR":   "\033[0;31m",
-        "WARNING": "\033[0;33m",
-        "DEBUG":   "\033[0;37m",
-        "INFO":    "\033[0;34m",
-        "SUCCESS": "\033[0;32m",
-        "DEFAULT": "\033[0m",
-    },
-)
+try:
+    import rich
+except ImportError:
+    import utils.fallbackconsole as c
+else:
+    import utils.richconsole as c
+finally:
+    _print = c.print
+    _info = c.info
+    _debug = c.debug
+    _success = c.success
+    _warning = c.warning
+    _error = c.error
 
 
-def box_print(*objects: Any, chr: str = "*", sep: str = " ", file: TextIO = sys.stdout, flush: bool = False) -> None:
+def box_print(*objects: Any, chr: str = "*", sep: str = " ") -> None:
     size = len(sep.join([chr, *objects, chr]))
     print(chr * size)
-    print(chr, *objects, chr, sep=sep, file=file, flush=flush)
+    print(chr, *objects, chr, sep=sep)
     print(chr * size)
 
 
@@ -73,77 +75,25 @@ def getch() -> str:
     return _var_getch()
 
 
-def info(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
-    if pretty_printing:
-        print(
-            Colors.INFO.value,
-            *objects,
-            Colors.DEFAULT.value,
-            sep=sep,
-            end=end,
-            file=file,
-            flush=flush
-        )
-    else:
-        print(*objects, sep=sep, end=end, file=file, flush=flush)
+def print(*objects: Any, sep: str = " ", end: str = "\n", style: str = None):
+    _print(*objects, sep=sep, end=end, style=style)
 
 
-def debug(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
-    if enable_debugging:
-        if pretty_printing:
-            print(
-                Colors.DEBUG,
-                *objects,
-                Colors.DEFAULT,
-                sep=sep,
-                end=end,
-                file=file,
-                flush=flush
-            )
-        else:
-            print(*objects, sep=sep, end=end, file=file, flush=flush)
+def info(*objects: Any, sep: str = " ", end: str = "\n") -> None:
+    _info(*objects, sep=sep, end=end)
 
 
-def success(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
-    if pretty_printing:
-        print(
-            Colors.SUCCESS.value,
-            *objects,
-            Colors.DEFAULT.value,
-            sep=sep,
-            end=end,
-            file=file,
-            flush=flush
-        )
-    else:
-        print(*objects, sep=sep, end=end, file=file, flush=flush)
+def debug(*objects: Any, sep: str = " ", end: str = "\n") -> None:
+    _debug(*objects, sep=sep, end=end)
 
 
-def warning(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
-    if pretty_printing:
-        print(
-            Colors.WARNING.value,
-            *objects,
-            Colors.DEFAULT.value,
-            sep=sep,
-            end=end,
-            file=file,
-            flush=flush
-        )
-    else:
-        print(*objects, sep=sep, end=end, file=file, flush=flush)
+def success(*objects: Any, sep: str = " ", end: str = "\n") -> None:
+    _success(*objects, sep=sep, end=end)
 
 
-def error(*objects: Any, sep: str = " ", end: str = "\n", file: TextIO = sys.stdout, flush: bool = False) -> None:
-    if pretty_printing:
-        print(
-            Colors.ERROR.value,
-            *objects,
-            Colors.DEFAULT.value,
-            sep=sep,
-            end=end,
-            file=file,
-            flush=flush
-        )
-    else:
-        print(*objects, sep=sep, end=end, file=file, flush=flush)
+def warning(*objects: Any, sep: str = " ", end: str = "\n") -> None:
+    _warning(*objects, sep=sep, end=end)
+
+
+def error(*objects: Any, sep: str = " ", end: str = "\n") -> None:
+    _error(*objects, sep=sep, end=end)
