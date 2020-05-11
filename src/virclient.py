@@ -3,7 +3,7 @@ import socket
 from typing import Iterable
 
 from utils import console as con, network
-from utils.network import Status
+from utils.network import Request
 
 
 class Client:
@@ -38,7 +38,7 @@ class Client:
 
     async def get_checksum(self):
         async def _get(soc: socket.socket) -> str:
-            network.send_parameter(soc, Status.CHECKSUM.value)
+            network.send_parameter(soc, Request.CHECKSUM.name)
             return network.parse_parameter(soc)
 
         self.checks = await asyncio.gather(

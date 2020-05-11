@@ -82,11 +82,6 @@ def send_parameter(soc: socket.socket, param: str) -> None:
     soc.sendall(add_parameter(param))
 
 
-Status = Enum(
-    "Status", {"IDLE":      "idle",
-               "CHECKSUM":  "checksum",
-               "FILE_SIZE": "file_size",
-               "TRANSFER":  "transfer",
-               "QUITING":   "quiting"
-               }
-)
+class Request(Enum):
+    CHECKSUM, FILE_SIZE, TRANSFER = range(3)
+

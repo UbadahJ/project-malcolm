@@ -1,9 +1,9 @@
 from multiprocessing import Queue
 from queue import Empty
 
-from utils import network
-from utils.network import Status
 from utils import file
+from utils import network
+from utils.network import Request
 
 
 class Server:
@@ -12,21 +12,24 @@ class Server:
         self.id = id
         self.interval = interval
         self.port = port
-        self.status = Status.IDLE
         self.queue = queue
+        self.request = None
 
+        self._start()
+
+    def _start(self):
         with network.create_server_connection(network.get_local_ip(), self.port) as soc:
             soc.listen()
-            while self.status != Status.QUITING:
+            while True:
                 if soc:
-                    c_soc, addr = soc.accept()
-                    self.status = Status(network.parse_parameter(c_soc))
+                    c_soc, _ = soc.accept()
+                    self.request = Request(network.parse_parameter(c_soc))
                     self.update()
-                    if self.status == Status.CHECKSUM:
+                    if self.request == Request.CHECKSUM:
                         network.send_parameter(c_soc, file.gen_checksum(self.src))
-                    elif self.status == Status.FILE_SIZE:
+                    elif self.request == Request.FILE_SIZE:
                         pass
-                    elif self.status == Status.TRANSFER:
+                    elif self.request == Request.TRANSFER:
                         pass
                     else:
                         pass
@@ -37,6 +40,3 @@ class Server:
                 self.queue.get_nowait()
         except Empty:
             self.queue.put("Server {} at port {}: Status {}".format(self.id, self.port, self.status))
-
-    def kill(self):
-        self.status = Status.QUITING
