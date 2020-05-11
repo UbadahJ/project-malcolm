@@ -2,9 +2,9 @@
 
 import argparse
 import multiprocessing as mp
-from queue import Empty
 import pathlib
 import time
+from queue import Empty
 
 from utils import console as con, file, network
 from utils.console import print
@@ -99,8 +99,11 @@ if __name__ == "__main__":
     procs = []
     for port in args.ports:
         queue = mp.Queue()
-        process = mp.Process(target=Server, args=(args.file,),
-                             kwargs={'id': int(port), 'interval': args.interval, 'port': int(port), 'queue': queue})
+        process = mp.Process(
+            target=Server,
+            args=(args.file,),
+            kwargs={"id": int(port), "interval": args.interval, "port": int(port), "queue": queue},
+        )
         process.start()
         procs.append((process, queue))
 

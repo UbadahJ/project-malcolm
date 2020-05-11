@@ -7,6 +7,7 @@ from enum import Enum
 from time import sleep
 from typing import Optional
 from urllib.request import urlopen
+from utils.console import debug
 
 
 def get_local_ip() -> str:
@@ -14,7 +15,8 @@ def get_local_ip() -> str:
         try:
             s.connect(("10.255.255.255", 1))
             ip = s.getsockname()[0]
-        except:
+        except Exception as e:
+            debug(e)
             ip = "127.0.0.1"
     return ip
 
@@ -22,7 +24,8 @@ def get_local_ip() -> str:
 def get_public_ip() -> str:
     try:
         return json.loads(urlopen("https://api.myip.com").read())["ip"]
-    except:
+    except Exception as e:
+        debug(e)
         return ""
 
 
@@ -36,7 +39,8 @@ def check_sock(ip: str, port: int) -> bool:
     with socket.socket() as sock:
         try:
             sock.bind((ip, port))
-        except:
+        except Exception as e:
+            debug(e)
             return False
         else:
             return True
@@ -75,7 +79,7 @@ def add_parameter(param: str) -> bytes:
 
 def parse_parameter(soc: socket.socket) -> str:
     size = recv_bytes(soc, 4)
-    return recv_bytes(soc, struct.unpack("I", size)[0]).decode('utf-8')
+    return recv_bytes(soc, struct.unpack("I", size)[0]).decode("utf-8")
 
 
 def send_parameter(soc: socket.socket, param: str) -> None:
@@ -84,4 +88,3 @@ def send_parameter(soc: socket.socket, param: str) -> None:
 
 class Request(Enum):
     CHECKSUM, FILE_SIZE, TRANSFER = (str(i) for i in range(3))
-

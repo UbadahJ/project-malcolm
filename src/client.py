@@ -11,7 +11,7 @@ from virclient import Client
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Launches a client that can connect to multiple servers that includes error handling and file "
-                    "verification"
+        "verification"
     )
     parser.add_argument(
         "-i",
@@ -89,4 +89,6 @@ def verify(args: argparse.Namespace):
 
 if __name__ == "__main__":
     args = verify(parse_args())
-    Client(address=args.address, output=args.output, ports=args.port, resume=args.resume)
+    Client(
+        address=args.address, output=args.output, ports=args.port, resume=args.resume
+    )

@@ -6,6 +6,7 @@ from utils import console as con, network
 from utils.network import Request
 from utils.console import print
 
+
 class Client:
     def on_create(self):
         con.clear()
@@ -41,9 +42,7 @@ class Client:
             network.send_parameter(soc, Request.CHECKSUM.value)
             return network.parse_parameter(soc)
 
-        self.checks = await asyncio.gather(
-            *(_get(soc) for soc in self.conns)
-        )
+        self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
 
 
 async def _get_checksum(soc: socket.socket):

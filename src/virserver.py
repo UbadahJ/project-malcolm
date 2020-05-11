@@ -6,6 +6,7 @@ from utils import network
 from utils.network import Request
 from utils.console import print
 
+
 class Server:
     def __init__(self, src, *, id: int, interval: int, port: int, queue: Queue):
         self.src = src
@@ -39,4 +40,8 @@ class Server:
             while True:
                 self.queue.get_nowait()
         except Empty:
-            self.queue.put("Server {} at port {}: Status {}".format(self.id, self.port, self.request))
+            self.queue.put(
+                "Server {} at port {}: Status {}".format(
+                    self.id, self.port, self.request
+                )
+            )
