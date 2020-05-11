@@ -1,10 +1,11 @@
 import asyncio
 import socket
 from typing import Iterable
+from typing import Optional
 
 from utils import console as con, network
-from utils.network import Request
 from utils.console import print
+from utils.network import Request
 
 
 class Client:
@@ -19,17 +20,17 @@ class Client:
         con.getch()
 
     def __init__(self, *, address: str, ports: Iterable[str], output: str, resume: bool):
-        self.output = output
-        self.address = address
-        self.ports = ports
-        self.resume = resume
-        self.conns = None
-        self.checks = None
+        self.output: str = output
+        self.address: str = address
+        self.ports: Iterable[str] = ports
+        self.resume: bool = resume
+        self.conns: Optional[Iterable[socket.socket]] = None
+        self.checks: Optional[Iterable[str]] = None
 
         self.on_create()  # Show launch message to user
         self.generate_connections()  # Generate connections using netutils
         asyncio.run(self.get_checksum())  # Get the checksum of the files
-        print(self.checks)
+        con.debug(*self.checks)
 
     def generate_connections(self):
         self.conns = [
