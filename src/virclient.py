@@ -10,7 +10,7 @@ from utils.network import Request
 
 
 class Client:
-    def on_create(self):
+    def on_create(self) -> None:
         con.clear()
         con.box_print("Project Malcolm")
         print("Local IP Address:", network.get_local_ip())
@@ -34,20 +34,20 @@ class Client:
         con.debug(self.checks)
         self.verify_checksum()  # Verify files and remove the unmatched servers
 
-    def generate_connections(self):
+    def generate_connections(self) -> None:
         self.conns = [
             network.create_connection(self.address, int(port))
             for port in self.ports
         ]
 
-    async def get_checksum(self):
+    async def get_checksum(self) -> None:
         async def _get(soc: socket.socket) -> str:
             network.send_parameter(soc, Request.CHECKSUM.value)
             return list(network.parse_parameter(soc))[0]
 
         self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
 
-    def verify_checksum(self):
+    def verify_checksum(self) -> None:
         self.checks = sorted(self.checks)
         check_count = []
         # Group the same checksum ad make tuple with there count
@@ -62,7 +62,3 @@ class Client:
             for pair in zip(self.ports, self.checks)
             if pair[1] == check_selected
         ]))
-
-
-async def _get_checksum(soc: socket.socket):
-    return network.parse_parameter(soc)
