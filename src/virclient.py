@@ -31,6 +31,7 @@ class Client:
         self.on_create()  # Show launch message to user
         self.generate_connections()  # Generate connections using netutils
         asyncio.run(self.get_checksum())  # Get the checksum of the files
+        con.debug(self.checks)
         self.verify_checksum()  # Verify files and remove the unmatched servers
 
     def generate_connections(self):
@@ -42,7 +43,7 @@ class Client:
     async def get_checksum(self):
         async def _get(soc: socket.socket) -> str:
             network.send_parameter(soc, Request.CHECKSUM.value)
-            return network.parse_parameter(soc)
+            return network.parse_parameter(soc)[0]
 
         self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
 

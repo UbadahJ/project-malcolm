@@ -24,7 +24,8 @@ class Server:
             while True:
                 if soc:
                     c_soc, _ = soc.accept()
-                    self.request = Request(network.parse_parameter(c_soc))
+                    request, *params = network.parse_parameter(c_soc)
+                    self.request = Request(request)
                     self.update()
                     if self.request == Request.CHECKSUM:
                         network.send_parameter(c_soc, file.gen_checksum(self.src))
