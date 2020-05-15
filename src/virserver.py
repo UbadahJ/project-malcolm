@@ -5,6 +5,7 @@ from typing import Optional
 
 from utils import file, network
 from utils.network import Request
+import utils.console as con
 
 
 class Server:
@@ -22,22 +23,26 @@ class Server:
         with network.create_server_connection(network.get_local_ip(), self.port) as soc:
             soc.listen()
             while True:
-                if soc:
-                    c_soc, _ = soc.accept()
-                    request, *params = network.parse_parameter(c_soc)
-                    self.request = Request(request)
-                    self.update()
-                    if self.request == Request.CHECKSUM:
-                        network.send_parameter(c_soc, file.gen_checksum(self.src))
-                    elif self.request == Request.FILE_SIZE:
-                        # TODO: Add code here
-                        pass
-                    elif self.request == Request.TRANSFER:
-                        # TODO: Add code here
-                        pass
-                    else:
-                        # TODO: Add code here
-                        pass
+                try:
+                    if soc:
+                        c_soc, _ = soc.accept()
+                        request, *params = network.parse_parameter(c_soc)
+                        self.request = Request(request)
+                        self.update()
+                        if self.request == Request.CHECKSUM:
+                            network.send_parameter(c_soc, file.gen_checksum(self.src))
+                        elif self.request == Request.FILE_SIZE:
+                            # TODO: Add code here
+                            pass
+                        elif self.request == Request.TRANSFER:
+                            # TODO: Add code here
+                            pass
+                        else:
+                            # TODO: Add code here
+                            pass
+                except Exception as e:
+                    # TODO: Add better error handling
+                    con.debug(e)
 
     def update(self):
         try:
