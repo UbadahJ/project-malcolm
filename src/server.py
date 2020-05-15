@@ -107,7 +107,7 @@ if __name__ == "__main__":
         process.start()
         procs.append((process, queue))
 
-    status = ["" for i in procs]
+    status = ["" for _ in procs]
     while True:
         con.clear()
         try:

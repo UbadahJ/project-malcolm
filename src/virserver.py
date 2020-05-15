@@ -29,10 +29,13 @@ class Server:
                     if self.request == Request.CHECKSUM:
                         network.send_parameter(c_soc, file.gen_checksum(self.src))
                     elif self.request == Request.FILE_SIZE:
+                        # TODO: Add code here
                         pass
                     elif self.request == Request.TRANSFER:
+                        # TODO: Add code here
                         pass
                     else:
+                        # TODO: Add code here
                         pass
 
     def update(self):

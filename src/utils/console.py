@@ -41,7 +41,7 @@ def _find_getch() -> Callable:
             old_settings = termios.tcgetattr(fd)
             tty.setraw(fd)
             ch = sys.stdin.read(1)
-        except:
+        except Exception:
             warning("Failed to get a getch() configuration, falling back to input()")
             return input()
         else:
