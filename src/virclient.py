@@ -1,7 +1,8 @@
 import asyncio
 import socket
-from typing import Iterable
-from typing import Optional
+from itertools import groupby
+from operator import itemgetter
+from typing import Iterable, Optional
 
 from utils import console as con, network
 from utils.console import print
@@ -30,7 +31,7 @@ class Client:
         self.on_create()  # Show launch message to user
         self.generate_connections()  # Generate connections using netutils
         asyncio.run(self.get_checksum())  # Get the checksum of the files
-        con.debug(*self.checks)
+        self.verify_checksum()  # Verify files and remove the unmatched servers
 
     def generate_connections(self):
         self.conns = [
@@ -44,6 +45,22 @@ class Client:
             return network.parse_parameter(soc)
 
         self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
+
+    def verify_checksum(self):
+        self.checks = sorted(self.checks)
+        check_count = []
+        # Group the same checksum ad make tuple with there count
+        for _, g_iter in groupby(self.checks):
+            tmp = list(g_iter)
+            check_count.append((len(tmp), tmp[0]))
+        # Find the max number of same checksum and return the checksum
+        check_selected = max(check_count, key=itemgetter(0))[1]
+        # Filter the ports whose checksum doesn't match
+        self.ports, self.checks = map(list, zip(*[
+            pair
+            for pair in zip(self.ports, self.checks)
+            if pair[1] == check_selected
+        ]))
 
 
 async def _get_checksum(soc: socket.socket):
