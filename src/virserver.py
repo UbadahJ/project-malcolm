@@ -1,20 +1,20 @@
+from io import BufferedReader
 from multiprocessing import Queue
 from queue import Empty
+from typing import Optional
 
-from utils import file
-from utils import network
+from utils import file, network
 from utils.network import Request
-from utils.console import print
 
 
 class Server:
-    def __init__(self, src, *, id: int, interval: int, port: int, queue: Queue):
-        self.src = src
-        self.id = id
-        self.interval = interval
-        self.port = port
-        self.queue = queue
-        self.request = None
+    def __init__(self, src: str, *, id: int, interval: int, port: int, queue: Queue):
+        self.src: str = src
+        self.id: int = id
+        self.interval: int = interval
+        self.port: int = port
+        self.queue: Queue = queue
+        self.request: Optional[Request] = None
 
         self._start()
 
