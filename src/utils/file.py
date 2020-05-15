@@ -15,4 +15,4 @@ def get_size(file: str) -> int:
 
 def gen_checksum(file: str) -> str:
     with open(file, "rb") as f:
-        return basename(file) + "::" + sha1(f.read()).hexdigest()
+        return sha1(basename(file).encode('utf-8')).hexdigest() + sha1(f.read()).hexdigest()
