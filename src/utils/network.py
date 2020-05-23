@@ -5,7 +5,7 @@ import struct
 import subprocess
 from enum import Enum
 from time import sleep
-from typing import Optional, Iterable
+from typing import Optional, Sequence
 from urllib.request import urlopen
 
 from utils.console import debug
@@ -79,7 +79,7 @@ def add_parameter(*param: str) -> bytes:
     return struct.pack("I", len(param_str)) + param_str.encode("utf-8")
 
 
-def parse_parameter(soc: socket.socket) -> Iterable[str]:
+def parse_parameter(soc: socket.socket) -> Sequence[str]:
     size = recv_bytes(soc, 4)
     return recv_bytes(soc, struct.unpack("I", size)[0]).decode("utf-8").split("::")
 
