@@ -2,7 +2,7 @@ import asyncio
 import socket
 from itertools import groupby
 from operator import itemgetter
-from typing import Iterable, Optional
+from typing import List, Optional
 
 from utils import console as con, network
 from utils.console import print
@@ -20,21 +20,24 @@ class Client:
         print("Press any key to continue")
         con.getch()
 
-    def __init__(self, *, address: str, ports: Iterable[str], output: str, resume: bool):
+    def __init__(self, *, address: str, ports: List[str], output: str, resume: bool):
         self.output: str = output
         self.address: str = address
-        self.ports: Iterable[str] = ports
+        self.ports: List[str] = ports
         self.resume: bool = resume
-        self.conns: Optional[Iterable[socket.socket]] = None
-        self.checks: Optional[Iterable[str]] = None
+        self.conns: Optional[List[socket.socket]] = None
+        self.checks: Optional[List[str]] = None
+        self.file_size: Optional[int] = None
 
         self.on_create()  # Show launch message to user
-        self.generate_connections()  # Generate connections using netutils
         asyncio.run(self.get_checksum())  # Get the checksum of the files
-        con.debug(self.checks)
         self.verify_checksum()  # Verify files and remove the unmatched servers
+        self.get_file_size()
 
     def generate_connections(self) -> None:
+        if self.conns is not None:
+            for soc in self.conns:
+                soc.close()
         self.conns = [
             network.create_connection(self.address, int(port))
             for port in self.ports
@@ -43,8 +46,9 @@ class Client:
     async def get_checksum(self) -> None:
         async def _get(soc: socket.socket) -> str:
             network.send_parameter(soc, Request.CHECKSUM.value)
-            return list(network.parse_parameter(soc))[0]
+            return network.parse_parameter(soc)[0]
 
+        self.generate_connections()
         self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
 
     def verify_checksum(self) -> None:
@@ -62,3 +66,8 @@ class Client:
             for pair in zip(self.ports, self.checks)
             if pair[1] == check_selected
         ]))
+
+    def get_file_size(self) -> None:
+        self.generate_connections()
+        network.send_parameter(self.conns[0], Request.FILE_SIZE.value)
+        self.file_size = int(network.parse_parameter(self.conns[0])[0])

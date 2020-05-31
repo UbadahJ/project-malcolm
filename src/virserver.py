@@ -1,11 +1,10 @@
-from io import BufferedReader
 from multiprocessing import Queue
 from queue import Empty
 from typing import Optional
 
+import utils.console as con
 from utils import file, network
 from utils.network import Request
-import utils.console as con
 
 
 class Server:
@@ -21,25 +20,26 @@ class Server:
 
     def _start(self):
         with network.create_server_connection(network.get_local_ip(), self.port) as soc:
-            soc.listen()
             while True:
                 try:
+                    soc.listen()
                     if soc:
                         c_soc, _ = soc.accept()
                         request, *params = network.parse_parameter(c_soc)
+                        con.debug(c_soc, request, params)
                         self.request = Request(request)
                         self.update()
                         if self.request == Request.CHECKSUM:
                             network.send_parameter(c_soc, file.gen_checksum(self.src))
                         elif self.request == Request.FILE_SIZE:
-                            # TODO: Add code here
-                            pass
+                            network.send_parameter(c_soc, str(file.get_size(self.src)))
                         elif self.request == Request.TRANSFER:
                             # TODO: Add code here
                             pass
                         else:
                             # TODO: Add code here
                             pass
+                        c_soc.close()
                 except Exception as e:
                     # TODO: Add better error handling
                     con.debug(e)
