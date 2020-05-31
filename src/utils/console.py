@@ -1,7 +1,6 @@
 import platform
 import subprocess
-from typing import Any
-from typing import Callable
+from typing import Any, Callable
 
 pretty_printing = False
 enable_debugging = True
@@ -59,7 +58,8 @@ def getch() -> str:
 
 
 def show_error_msg(exception: Exception):
-    c.print('Failed to load rich library for formatting, falling back to built-in console formatting')
+    c.print(
+        'Failed to load rich library for formatting, falling back to built-in console formatting')
     c.print('Install pip install -user rich')
     c.print('To get better terminal support')
     c.error(exception)

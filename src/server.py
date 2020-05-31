@@ -102,7 +102,12 @@ if __name__ == "__main__":
         process = mp.Process(
             target=Server,
             args=(args.file,),
-            kwargs={"id": int(port), "interval": args.interval, "port": int(port), "queue": queue},
+            kwargs={
+                "id": int(port),
+                "interval": args.interval,
+                "port": int(port),
+                "queue": queue,
+            },
         )
         process.start()
         procs.append((process, queue))

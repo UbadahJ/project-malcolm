@@ -29,9 +29,13 @@ class Client:
         self.checks: Optional[List[str]] = None
         self.file_size: Optional[int] = None
 
-        self.on_create()  # Show launch message to user
-        asyncio.run(self.get_checksum())  # Get the checksum of the files
-        self.verify_checksum()  # Verify files and remove the unmatched servers
+        # Show launch message to user
+        self.on_create()
+        # Get the checksum of the files
+        asyncio.run(self.get_checksum())
+        # Verify files and remove the unmatched servers
+        self.verify_checksum()
+        # Fetch the file size from any server
         self.get_file_size()
 
     def generate_connections(self) -> None:

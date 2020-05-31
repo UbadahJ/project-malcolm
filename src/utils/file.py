@@ -1,7 +1,7 @@
 import os
 from hashlib import sha1
-from typing import List
 from os.path import basename
+from typing import List
 
 
 def spilt(file: str, parts: int) -> List[int]:
@@ -15,4 +15,7 @@ def get_size(file: str) -> int:
 
 def gen_checksum(file: str) -> str:
     with open(file, "rb") as f:
-        return sha1(basename(file).encode('utf-8')).hexdigest() + sha1(f.read()).hexdigest()
+        return (
+            sha1(basename(file).encode("utf-8")).hexdigest()
+            + sha1(f.read()).hexdigest()
+        )

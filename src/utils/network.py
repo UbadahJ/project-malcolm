@@ -57,7 +57,9 @@ def create_connection(ip: str, port: int) -> socket.socket:
     return soc
 
 
-def recv_bytes(soc: socket.socket, bytes: int, wait: bool = True) -> Optional[bytearray]:
+def recv_bytes(
+    soc: socket.socket, bytes: int, wait: bool = True
+) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < bytes:
         try:
