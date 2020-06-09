@@ -34,8 +34,11 @@ class Server:
                         elif self.request == Request.FILE_SIZE:
                             network.send_parameter(c_soc, str(file.get_size(self.src)))
                         elif self.request == Request.TRANSFER:
-                            # TODO: Add code here
-                            pass
+                            start, end = int(params[0]), int(params[1])
+                            with open(self.src, 'rb') as f:
+                                f.seek(start)
+                                data = f.read(end-start)
+                                network.send_parameter(c_soc, data.decode('utf-8'))
                         else:
                             # TODO: Add code here
                             pass

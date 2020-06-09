@@ -7,6 +7,7 @@ from typing import List, Optional
 from utils import console as con, network
 from utils.console import print
 from utils.network import Request
+from utils.file import spilt
 
 
 class Client:
@@ -28,6 +29,7 @@ class Client:
         self.conns: Optional[List[socket.socket]] = None
         self.checks: Optional[List[str]] = None
         self.file_size: Optional[int] = None
+        self.data: Optional[List[str]] = None
 
         # Show launch message to user
         self.on_create()
@@ -37,6 +39,9 @@ class Client:
         self.verify_checksum()
         # Fetch the file size from any server
         self.get_file_size()
+        # Get the data from server
+        asyncio.run(self.get_data())
+        con.debug(self.data)
 
     def generate_connections(self) -> None:
         if self.conns is not None:
@@ -75,3 +80,14 @@ class Client:
         self.generate_connections()
         network.send_parameter(self.conns[0], Request.FILE_SIZE.value)
         self.file_size = int(network.parse_parameter(self.conns[0])[0])
+
+    async def get_data(self) -> None:
+        async def _get(soc: socket.socket, start, end):
+            network.send_parameter(soc, Request.TRANSFER.value, str(start), str(end))
+            return network.parse_parameter(soc)[0].encode('utf-8')
+
+        self.generate_connections()
+        self.data = await asyncio.gather(
+            *(_get(soc, *tp) for soc, tp in
+              zip(self.conns, spilt(file_size=self.file_size, parts=len(self.ports))))
+        )
