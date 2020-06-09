@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import os
 from itertools import groupby
 from operator import itemgetter
 from typing import List, Optional
@@ -26,6 +27,7 @@ class Client:
         self.address: str = address
         self.ports: List[str] = ports
         self.resume: bool = resume
+        self.file_name: Optional[str] = None
         self.conns: Optional[List[socket.socket]] = None
         self.checks: Optional[List[str]] = None
         self.file_size: Optional[int] = None
@@ -37,11 +39,14 @@ class Client:
         asyncio.run(self.get_checksum())
         # Verify files and remove the unmatched servers
         self.verify_checksum()
+        # Fetch the file name from any server
+        self.get_file_name()
         # Fetch the file size from any server
         self.get_file_size()
         # Get the data from server
         asyncio.run(self.get_data())
-        con.debug(self.data)
+        # Output data
+        self.flush_data()
 
     def generate_connections(self) -> None:
         if self.conns is not None:
@@ -76,6 +81,11 @@ class Client:
             if pair[1] == check_selected
         ]))
 
+    def get_file_name(self):
+        self.generate_connections()
+        network.send_parameter(self.conns[0], Request.FILE_NAME.value)
+        self.file_name = network.parse_parameter(self.conns[0])[0]
+
     def get_file_size(self) -> None:
         self.generate_connections()
         network.send_parameter(self.conns[0], Request.FILE_SIZE.value)
@@ -91,3 +101,10 @@ class Client:
             *(_get(soc, *tp) for soc, tp in
               zip(self.conns, spilt(file_size=self.file_size, parts=len(self.ports))))
         )
+
+    def flush_data(self):
+        os.chdir(self.output)
+        with open(self.file_name, 'wb') as f:
+            for d in self.data:
+                f.write(d)
+

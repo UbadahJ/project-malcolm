@@ -31,6 +31,8 @@ class Server:
                         self.update()
                         if self.request == Request.CHECKSUM:
                             network.send_parameter(c_soc, file.gen_checksum(self.src))
+                        elif self.request == Request.FILE_NAME:
+                            network.send_parameter(c_soc, file.get_file_name(self.src))
                         elif self.request == Request.FILE_SIZE:
                             network.send_parameter(c_soc, str(file.get_size(self.src)))
                         elif self.request == Request.TRANSFER:
