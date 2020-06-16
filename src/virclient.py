@@ -59,8 +59,8 @@ class Client:
 
     async def get_checksum(self) -> None:
         async def _get(soc: socket.socket) -> str:
-            network.send_parameter(soc, Request.CHECKSUM.value)
-            return network.parse_parameter(soc)[0]
+            network.send_request(soc, network.encode_parameter(Request.CHECKSUM.value))
+            return network.decode_parameter(network.get_request(soc))[0]
 
         self.generate_connections()
         self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
@@ -83,23 +83,23 @@ class Client:
 
     def get_file_name(self):
         self.generate_connections()
-        network.send_parameter(self.conns[0], Request.FILE_NAME.value)
-        self.file_name = network.parse_parameter(self.conns[0])[0]
+        network.send_request(self.conns[0], network.encode_parameter(Request.FILE_NAME.value))
+        self.file_name = network.decode_parameter(network.get_request(self.conns[0]))[0]
 
     def get_file_size(self) -> None:
         self.generate_connections()
-        network.send_parameter(self.conns[0], Request.FILE_SIZE.value)
-        self.file_size = int(network.parse_parameter(self.conns[0])[0])
+        network.send_request(self.conns[0], network.encode_parameter(Request.FILE_SIZE.value))
+        self.file_size = int(network.decode_parameter(network.get_request(self.conns[0]))[0])
 
     async def get_data(self) -> None:
         async def _get(soc: socket.socket, start, end):
-            network.send_parameter(soc, Request.TRANSFER.value, str(start), str(end))
-            return network.parse_parameter(soc)[0].encode('utf-8')
+            network.send_request(soc, network.encode_parameter(Request.TRANSFER.value, str(start), str(end)))
+            return network.get_request(soc)
 
         self.generate_connections()
         self.data = await asyncio.gather(
             *(_get(soc, *tp) for soc, tp in
-              zip(self.conns, spilt(file_size=self.file_size, parts=len(self.ports))))
+              zip(self.conns, spilt(file_size=self.file_size, parts=len(self.ports) + 1)))
         )
 
     def flush_data(self):

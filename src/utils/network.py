@@ -5,7 +5,7 @@ import struct
 import subprocess
 from enum import Enum
 from time import sleep
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 from urllib.request import urlopen
 
 from utils.console import debug
@@ -58,12 +58,12 @@ def create_connection(ip: str, port: int) -> socket.socket:
 
 
 def recv_bytes(
-    soc: socket.socket, bytes: int, wait: bool = True
+        soc: socket.socket, size: int, wait: bool = True
 ) -> Optional[bytearray]:
     data = bytearray()
-    while len(data) < bytes:
+    while len(data) < size:
         try:
-            packet = soc.recv(bytes - len(data))
+            packet = soc.recv(size - len(data))
         except OSError as e:
             if wait:
                 sleep(1)
@@ -76,18 +76,21 @@ def recv_bytes(
     return data
 
 
-def add_parameter(*param: str) -> bytes:
-    param_str = "::".join(param)
-    return struct.pack("I", len(param_str)) + param_str.encode("utf-8")
+def encode_parameter(*param: str) -> bytes:
+    return "::".join(param).encode("utf-8")
 
 
-def parse_parameter(soc: socket.socket) -> Sequence[str]:
-    size = recv_bytes(soc, 4)
-    return recv_bytes(soc, struct.unpack("I", size)[0]).decode("utf-8").split("::")
+def decode_parameter(param: bytes) -> Sequence[str]:
+    return param.decode("utf-8").split("::")
 
 
-def send_parameter(soc: socket.socket, *param: str) -> None:
-    soc.sendall(add_parameter(*param))
+def get_request(soc: socket.socket) -> bytes:
+    size = struct.unpack("I", recv_bytes(soc, 4))
+    return recv_bytes(soc, size[0])
+
+
+def send_request(soc: socket.socket, param: bytes) -> None:
+    soc.sendall(struct.pack("I", len(param)) + param)
 
 
 class Request(Enum):

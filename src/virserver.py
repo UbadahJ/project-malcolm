@@ -25,27 +25,27 @@ class Server:
                     soc.listen()
                     if soc:
                         c_soc, _ = soc.accept()
-                        request, *params = network.parse_parameter(c_soc)
-                        con.debug(c_soc, request, params)
+                        request, *params = network.decode_parameter(network.get_request(c_soc))
                         self.request = Request(request)
+                        con.print(request, params)
                         self.update()
                         if self.request == Request.CHECKSUM:
-                            network.send_parameter(c_soc, file.gen_checksum(self.src))
+                            network.send_request(c_soc, network.encode_parameter(file.gen_checksum(self.src)))
                         elif self.request == Request.FILE_NAME:
-                            network.send_parameter(c_soc, file.get_file_name(self.src))
+                            network.send_request(c_soc, network.encode_parameter(file.get_file_name(self.src)))
                         elif self.request == Request.FILE_SIZE:
-                            network.send_parameter(c_soc, str(file.get_size(self.src)))
+                            network.send_request(c_soc, network.encode_parameter(str(file.get_size(self.src))))
                         elif self.request == Request.TRANSFER:
                             start, end = int(params[0]), int(params[1])
                             with open(self.src, 'rb') as f:
                                 f.seek(start)
                                 data = f.read(end-start)
-                                network.send_parameter(c_soc, data.decode('utf-8'))
+                                network.send_request(c_soc, data)
                         else:
                             # TODO: Add code here
                             pass
                         c_soc.close()
-                except Exception as e:
+                except OSError as e:
                     # TODO: Add better error handling
                     con.debug(e)
 
