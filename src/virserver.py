@@ -30,24 +30,26 @@ class Server:
                         con.print(request, params)
                         self.update()
                         if self.request == Request.CHECKSUM:
-                            network.send_request(c_soc, network.encode_parameter(file.gen_checksum(self.src)))
+                            network.send_request(
+                                c_soc, network.encode_parameter(file.gen_checksum(self.src))
+                            )
                         elif self.request == Request.FILE_NAME:
-                            network.send_request(c_soc, network.encode_parameter(file.get_file_name(self.src)))
+                            network.send_request(
+                                c_soc, network.encode_parameter(file.get_file_name(self.src))
+                            )
                         elif self.request == Request.FILE_SIZE:
-                            network.send_request(c_soc, network.encode_parameter(str(file.get_size(self.src))))
+                            network.send_request(
+                                c_soc, network.encode_parameter(str(file.get_size(self.src)))
+                            )
                         elif self.request == Request.TRANSFER:
                             start, end = int(params[0]), int(params[1])
                             with open(self.src, 'rb') as f:
                                 f.seek(start)
                                 data = f.read(end-start)
                                 network.send_request(c_soc, data)
-                        else:
-                            # TODO: Add code here
-                            pass
                         c_soc.close()
                 except OSError as e:
-                    # TODO: Add better error handling
-                    con.debug(e)
+                    con.error("Error occurred by OS: {}\nArgument provided: {}".format(e, e.args))
 
     def update(self):
         try:
@@ -55,7 +57,5 @@ class Server:
                 self.queue.get_nowait()
         except Empty:
             self.queue.put(
-                "Server {} at port {}: Status {}".format(
-                    self.id, self.port, self.request
-                )
+                "Server {} at port {}: Status {}".format(self.id, self.port, self.request)
             )
