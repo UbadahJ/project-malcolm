@@ -1,14 +1,14 @@
 import asyncio
-import socket
 import os
+import socket
 from itertools import groupby
 from operator import itemgetter
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from utils import console as con, network
 from utils.console import print
-from utils.network import Request
 from utils.file import spilt
+from utils.network import Request
 
 
 class Client:
@@ -48,14 +48,18 @@ class Client:
         # Output data
         self.flush_data()
 
-    def generate_connections(self) -> None:
+    def generate_connections(self, *, sockets: Optional[Sequence[int]] = None) -> None:
         if self.conns is not None:
             for soc in self.conns:
                 soc.close()
-        self.conns = [
-            network.create_connection(self.address, int(port))
-            for port in self.ports
-        ]
+        if sockets is None:
+            self.conns = [
+                network.create_connection(self.address, int(port))
+                for port in self.ports
+            ]
+        else:
+            for sock in sockets:
+                self.conns[sock] = network.create_connection(self.address, int(self.ports[sock]))
 
     async def get_checksum(self) -> None:
         async def _get(soc: socket.socket) -> str:
@@ -82,18 +86,19 @@ class Client:
         ]))
 
     def get_file_name(self):
-        self.generate_connections()
+        self.generate_connections(sockets=(0,))
         network.send_request(self.conns[0], network.encode_parameter(Request.FILE_NAME.value))
         self.file_name = network.decode_parameter(network.get_request(self.conns[0]))[0]
 
     def get_file_size(self) -> None:
-        self.generate_connections()
+        self.generate_connections(sockets=(0,))
         network.send_request(self.conns[0], network.encode_parameter(Request.FILE_SIZE.value))
         self.file_size = int(network.decode_parameter(network.get_request(self.conns[0]))[0])
 
     async def get_data(self) -> None:
         async def _get(soc: socket.socket, start, end):
-            network.send_request(soc, network.encode_parameter(Request.TRANSFER.value, str(start), str(end)))
+            network.send_request(soc, network.encode_parameter(Request.TRANSFER.value, str(start),
+                                                               str(end)))
             return network.get_request(soc)
 
         self.generate_connections()
@@ -107,4 +112,3 @@ class Client:
         with open(self.file_name, 'wb') as f:
             for d in self.data:
                 f.write(d)
-
