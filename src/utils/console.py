@@ -1,11 +1,21 @@
 import platform
 import subprocess
+import sys
 from typing import Any, Callable
+
+import utils.fallbackconsole as c
 
 pretty_printing = False
 enable_debugging = True
 
 _var_getch = None
+
+_print = c.print
+_info = c.info
+_debug = c.debug
+_success = c.success
+_warning = c.warning
+_error = c.error
 
 
 def box_print(*objects: Any, chr: str = "*", sep: str = " ") -> None:
@@ -16,10 +26,8 @@ def box_print(*objects: Any, chr: str = "*", sep: str = " ") -> None:
 
 
 def clear() -> None:
-    if platform.system() == "Windows":
-        subprocess.Popen("cls", shell=True).communicate()
-    else:
-        print("\033c", end="")
+    subprocess.Popen("cls" if platform.system() == "Windows" else "clear", shell=True).communicate()
+    sys.stdout.flush()
 
 
 def _find_getch() -> Callable:
@@ -66,23 +74,6 @@ def show_error_msg(exception: Exception):
     c.print()
     c.print('Press any key to continue')
     getch()
-
-
-try:
-    from rich.console import Console
-except ImportError as ie:
-    import utils.fallbackconsole as c
-
-    show_error_msg(ie)
-else:
-    import utils.richconsole as c
-finally:
-    _print = c.print
-    _info = c.info
-    _debug = c.debug
-    _success = c.success
-    _warning = c.warning
-    _error = c.error
 
 
 def print(*objects: Any, sep: str = " ", end: str = "\n", style: str = None):

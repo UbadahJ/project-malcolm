@@ -7,7 +7,7 @@ import time
 from queue import Empty
 
 from utils import console as con, file, network
-from utils.console import print
+from utils.console import print, getch
 from virserver import Server
 
 
@@ -92,41 +92,63 @@ def init(args: argparse.Namespace):
     con.getch()
 
 
-if __name__ == "__main__":
-    args = verify(parse_args())
-    init(args)
-
-    procs = []
-    for port in args.ports:
-        queue = mp.Queue()
-        process = mp.Process(
-            target=Server,
-            args=(args.file,),
-            kwargs={
-                "id": int(port),
-                "interval": args.interval,
-                "port": int(port),
-                "queue": queue,
-            },
-        )
-        process.start()
-        procs.append((process, queue))
-
-    status = ["" for _ in procs]
+def display_info():
+    global process, queue
     while True:
         con.clear()
         try:
-            for i, (process, queue) in enumerate(procs):
+            for index, (process_id, process, queue) in enumerate(procs):
                 try:
-                    status[i] = queue.get_nowait()
+                    status[index] = queue.get_nowait()
                 except Empty:
                     pass
-                print(status[i])
+                print('\r', status[index])
         except KeyboardInterrupt as e:
             for process, queue in procs:
-                process.close()
+                process.terminate()
+                process.join()
             break
         except Exception as e:
             con.error(e)
         else:
             time.sleep(args.interval)
+
+
+if __name__ == "__main__":
+    args = verify(parse_args())
+    init(args)
+
+    procs = []
+    for process_id, port in enumerate(args.ports, start=1):
+        queue = mp.Queue()
+        process = mp.Process(
+            target=Server,
+            args=(args.file,),
+            kwargs={
+                "id":       process_id,
+                "interval": args.interval,
+                "port":     int(port),
+                "queue":    queue,
+            },
+        )
+        process.start()
+        procs.append((process_id, process, queue))
+
+    status = ["" for _ in procs]
+    display = mp.Process(target=display_info)
+    display.start()
+    while True:
+        try:
+            x = int(getch())
+            for index, (process_id, process, queue) in enumerate(procs):
+                if process_id == x:
+                    _has = True
+                    process.terminate()
+                    process.join()
+                    procs.remove(procs[index])
+                if len(procs) == 0:
+                    display.terminate()
+                    display.join()
+                    quit()
+        except ValueError as e:
+            con.error("Invalid value provided\nDescription: {}".format(e))
