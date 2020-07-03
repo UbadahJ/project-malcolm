@@ -3,9 +3,10 @@ import os
 import socket
 from itertools import groupby
 from operator import itemgetter
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple, Union
 
 from utils import console as con, network
+from utils.collections import flatten, first
 from utils.console import print
 from utils.file import spilt
 from utils.network import Request
@@ -49,25 +50,31 @@ class Client:
         self.flush_data()
 
     def generate_connections(self, *, sockets: Optional[Sequence[int]] = None) -> None:
+        # Close all the existing sockets
         if self.conns is not None:
             for soc in self.conns:
                 soc.close()
+        # Check if only selected sockets needs to be recreated
         if sockets is None:
+            # Recreate all the sockets
             self.conns = [
                 network.create_connection(self.address, int(port))
                 for port in self.ports
             ]
         else:
+            # Recreate the sockets given in sockets sequence parameter
             for sock in sockets:
                 self.conns[sock] = network.create_connection(self.address, int(self.ports[sock]))
+        # Remove all the ports that have None as a connection
+        self.ports = [port for port, conn in zip(self.ports, self.conns) if conn is not None]
+        # Remove all the None connections
+        self.conns = [conn for conn in self.conns if conn is not None]
 
     async def get_checksum(self) -> None:
-        async def _get(soc: socket.socket) -> str:
-            network.send_request(soc, network.encode_parameter(Request.CHECKSUM.value))
-            return network.decode_parameter(network.get_request(soc))[0]
-
         self.generate_connections()
-        self.checks = await asyncio.gather(*(_get(soc) for soc in self.conns))
+        self.checks = flatten(await asyncio.gather(
+            *(self._async_get(soc, Request.CHECKSUM) for soc in self.conns)
+        ))
 
     def verify_checksum(self) -> None:
         self.checks = sorted(self.checks)
@@ -87,24 +94,23 @@ class Client:
 
     def get_file_name(self):
         self.generate_connections(sockets=(0,))
-        network.send_request(self.conns[0], network.encode_parameter(Request.FILE_NAME.value))
-        self.file_name = network.decode_parameter(network.get_request(self.conns[0]))[0]
+        self.file_name = first(self._get(self.conns[0], Request.FILE_NAME))
 
     def get_file_size(self) -> None:
         self.generate_connections(sockets=(0,))
-        network.send_request(self.conns[0], network.encode_parameter(Request.FILE_SIZE.value))
-        self.file_size = int(network.decode_parameter(network.get_request(self.conns[0]))[0])
+        self.file_size = int(first(self._get(self.conns[0], Request.FILE_SIZE)))
 
     async def get_data(self) -> None:
-        async def _get(soc: socket.socket, start, end):
-            network.send_request(soc, network.encode_parameter(Request.TRANSFER.value, str(start),
-                                                               str(end)))
-            return network.get_request(soc)
+        def normalize(_tuple: Tuple[int, int]) -> Sequence[str]:
+            return [str(_tuple[0]), str(_tuple[1])]
 
+        print(self.file_size, spilt(file_size=self.file_size, parts=len(self.ports) + 1))
         self.generate_connections()
         self.data = await asyncio.gather(
-            *(_get(soc, *tp) for soc, tp in
-              zip(self.conns, spilt(file_size=self.file_size, parts=len(self.ports) + 1)))
+            *(self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
+              for soc, tp in zip(
+                self.conns, spilt(file_size=self.file_size, parts=len(self.ports) + 1)
+            ))
         )
 
     def flush_data(self):
@@ -112,3 +118,22 @@ class Client:
         with open(self.file_name, 'wb') as f:
             for d in self.data:
                 f.write(d)
+
+    def _get(self, soc: socket,
+             request: Request,
+             parameters: Sequence[str] = ('',),
+             *,
+             decode: bool = True) -> Union[Sequence[str], bytes]:
+        return asyncio.run(self._async_get(soc, request, parameters, decode=decode))
+
+    @staticmethod
+    async def _async_get(soc: socket,
+                         request: Request,
+                         parameters: Sequence[str] = ('',),
+                         *,
+                         decode: bool = True) -> Union[Sequence[str], bytes]:
+        network.send_request(soc, network.encode_parameter(request.value, *parameters))
+        data: bytes = network.get_request(soc)
+        if decode:
+            return network.decode_parameter(data)
+        return data

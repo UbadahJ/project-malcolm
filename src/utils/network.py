@@ -51,14 +51,18 @@ def create_server_connection(ip: str, port: int) -> socket.socket:
     return socket.create_server((ip, port))
 
 
-def create_connection(ip: str, port: int) -> socket.socket:
+def create_connection(ip: str, port: int) -> Optional[socket.socket]:
     soc = socket.socket()
-    soc.connect((ip, port))
+    try:
+        soc.connect((ip, port))
+    except ConnectionRefusedError as e:
+        debug(e)
+        return None
     return soc
 
 
 def recv_bytes(
-        soc: socket.socket, size: int, wait: bool = True
+        soc: socket.socket, size: int, wait: bool = True, retries: int = 3
 ) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < size:
@@ -66,11 +70,12 @@ def recv_bytes(
             packet = soc.recv(size - len(data))
         except OSError as e:
             if wait:
+                retries -= 1
                 sleep(1)
                 continue
             else:
                 raise e
-        if not packet:
+        if not packet or retries <= 0:
             return None
         data.extend(packet)
     return data
