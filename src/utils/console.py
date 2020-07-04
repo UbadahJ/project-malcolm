@@ -37,7 +37,7 @@ def _find_getch() -> Callable:
         # Non-POSIX. Return msvcrt's (Windows') getch.
         import msvcrt
 
-        return msvcrt.getch
+        return msvcrt.getch  # ignore
 
     # POSIX system. Create and return a getch that manipulates the tty.
     import sys, tty

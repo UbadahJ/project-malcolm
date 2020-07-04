@@ -23,5 +23,5 @@ def flatten(data: Sequence[Sequence[__T]]) -> Sequence[__T]:
         if isinstance(item, Sequence):
             _list.extend(item)
         else:
-            _list.append(item)
+            _list.append(item)  # type: ignore
     return _list

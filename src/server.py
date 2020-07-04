@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     procs = []
     for process_id, port in enumerate(args.ports, start=1):
-        queue = mp.Queue()
+        queue: mp.Queue = mp.Queue()
         process = mp.Process(
             target=Server,
             args=(args.file,),
