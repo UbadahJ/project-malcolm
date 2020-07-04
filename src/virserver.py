@@ -6,6 +6,7 @@ from typing import Optional
 import utils.console as con
 from utils import file, network
 from utils.network import Request
+from utils.nullsafe import NoneException, ifnoneelsethrow
 
 
 class Server:
@@ -27,7 +28,9 @@ class Server:
                     soc.listen()
                     if soc:
                         c_soc, _ = soc.accept()
-                        request, *params = network.decode_parameter(network.get_request(c_soc))
+                        request, *params = network.decode_parameter(
+                            ifnoneelsethrow(network.get_request(c_soc), NoneException())
+                        )
                         self.request = Request(request)
                         self.update()
                         if self.request == Request.CHECKSUM:
@@ -46,14 +49,13 @@ class Server:
                             start, end = int(params[0]), int(params[1])
                             with open(self.src, 'rb') as f:
                                 f.seek(start)
-                                data = f.read(end-start)
+                                data = f.read(end - start)
                                 network.send_request(c_soc, data)
-                except OSError as e:
-                    con.error("Error occurred by OS: {}\nArgument provided: {}".format(e, e.args))
+                        c_soc.close()
+                except (OSError, NoneException) as e:
+                    con.error("Error occurred: {}".format(e))
                     with open('log_server.log', 'a+') as f:
                         f.write('[{}] ERROR {}'.format(datetime.datetime.now(), e))
-                finally:
-                    c_soc.close()
 
     def update(self):
         try:
