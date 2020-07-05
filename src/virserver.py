@@ -46,6 +46,7 @@ class Server:
                                 c_soc, network.encode_parameter(str(file.get_size(self.src)))
                             )
                         elif self.request == Request.TRANSFER:
+                            params = [p for p in params]
                             start, end = int(params[0]), int(params[1])
                             with open(self.src, 'rb') as f:
                                 f.seek(start)
