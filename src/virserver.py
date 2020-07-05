@@ -1,12 +1,12 @@
 import datetime
 from multiprocessing import Queue
 from queue import Empty
-from typing import Optional
+from typing import Optional, Sequence
 
 import utils.console as con
 from utils import file, network
 from utils.network import Request
-from utils.nullsafe import NoneException, ifnoneelsethrow
+from utils.nullsafe import assertnotnone
 
 
 class Server:
@@ -29,7 +29,7 @@ class Server:
                     if soc:
                         c_soc, _ = soc.accept()
                         request, *params = network.decode_parameter(
-                            ifnoneelsethrow(network.get_request(c_soc), NoneException())
+                            assertnotnone(network.get_request(c_soc))
                         )
                         self.request = Request(request)
                         self.update()
@@ -52,7 +52,7 @@ class Server:
                                 data = f.read(end - start)
                                 network.send_request(c_soc, data)
                         c_soc.close()
-                except (OSError, NoneException) as e:
+                except (OSError, AssertionError) as e:
                     con.error("Error occurred: {}".format(e))
                     with open('log_server.log', 'a+') as f:
                         f.write('[{}] ERROR {}'.format(datetime.datetime.now(), e))
