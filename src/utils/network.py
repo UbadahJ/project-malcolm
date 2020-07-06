@@ -5,10 +5,11 @@ import struct
 import subprocess
 from enum import Enum
 from time import sleep
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 from urllib.request import urlopen
 
 from utils.console import debug
+from utils.nullsafe import assertnotnone
 
 
 def get_local_ip() -> str:
@@ -89,9 +90,12 @@ def decode_parameter(param: bytes) -> Sequence[str]:
     return param.decode("utf-8").split("::")
 
 
-def get_request(soc: socket.socket) -> bytes:
-    size = struct.unpack("I", recv_bytes(soc, 4))
-    return recv_bytes(soc, size[0])
+def get_request(soc: socket.socket) -> Optional[bytes]:
+    try:
+        size = struct.unpack("I", assertnotnone(recv_bytes(soc, 4)))
+        return bytes(assertnotnone(recv_bytes(soc, size[0])))
+    except (TypeError, AssertionError):
+        return None
 
 
 def send_request(soc: socket.socket, param: bytes) -> None:

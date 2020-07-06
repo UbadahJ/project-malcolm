@@ -10,6 +10,7 @@ from utils.collections import flatten, first
 from utils.console import print
 from utils.file import spilt
 from utils.network import Request
+from utils.nullsafe import assertnotnone, asserttype, optional
 
 
 class Client:
@@ -32,7 +33,7 @@ class Client:
         self.conns: Optional[List[socket.socket]] = None
         self.checks: Optional[List[str]] = None
         self.file_size: Optional[int] = None
-        self.data: Optional[List[str]] = None
+        self.data: Optional[List[bytes]] = None
 
         # Show launch message to user
         self.on_create()
@@ -55,32 +56,35 @@ class Client:
             for soc in self.conns:
                 soc.close()
         # Check if only selected sockets needs to be recreated
-        if sockets is None:
+        _conns: Optional[List[Optional[socket.socket]]] = \
+            None if self.conns is None else [optional(c) for c in self.conns]
+        if _conns is None or sockets is None:
             # Recreate all the sockets
-            self.conns = [
+            _conns = [
                 network.create_connection(self.address, int(port))
                 for port in self.ports
             ]
         else:
             # Recreate the sockets given in sockets sequence parameter
             for sock in sockets:
-                self.conns[sock] = network.create_connection(self.address, int(self.ports[sock]))
+                _conns[sock] = network.create_connection(self.address, int(self.ports[sock]))
         # Remove all the ports that have None as a connection
-        self.ports = [port for port, conn in zip(self.ports, self.conns) if conn is not None]
+        self.ports = [port for port, conn in zip(self.ports, _conns) if conn is not None]
         # Remove all the None connections
-        self.conns = [conn for conn in self.conns if conn is not None]
+        self.conns = [conn for conn in _conns if conn is not None]
 
     async def get_checksum(self) -> None:
         self.generate_connections()
-        self.checks = flatten(await asyncio.gather(
+        self.checks = [str(check) for check in flatten(await asyncio.gather(
             *(self._async_get(soc, Request.CHECKSUM) for soc in self.conns)
-        ))
+        ))]
 
     def verify_checksum(self) -> None:
-        self.checks = sorted(self.checks)
+        assert self.checks is not None
+        _checks = sorted(self.checks)
         check_count = []
         # Group the same checksum ad make tuple with there count
-        for _, g_iter in groupby(self.checks):
+        for _, g_iter in groupby(_checks):
             tmp = list(g_iter)
             check_count.append((len(tmp), tmp[0]))
         # Find the max number of same checksum and return the checksum
@@ -88,52 +92,60 @@ class Client:
         # Filter the ports whose checksum doesn't match
         self.ports, self.checks = map(list, zip(*[
             pair
-            for pair in zip(self.ports, self.checks)
+            for pair in zip(self.ports, _checks)
             if pair[1] == check_selected
         ]))
 
     def get_file_name(self):
         self.generate_connections(sockets=(0,))
-        self.file_name = first(self._get(self.conns[0], Request.FILE_NAME))
+        self.file_name = str(
+            assertnotnone(first(assertnotnone(self._get(self.conns[0], Request.FILE_NAME))))
+        )
 
     def get_file_size(self) -> None:
         self.generate_connections(sockets=(0,))
-        self.file_size = int(first(self._get(self.conns[0], Request.FILE_SIZE)))
+        self.file_size = int(
+            assertnotnone(first(assertnotnone(self._get(self.conns[0], Request.FILE_SIZE))))
+        )
 
     async def get_data(self) -> None:
         def normalize(_tuple: Tuple[int, int]) -> Sequence[str]:
             return [str(_tuple[0]), str(_tuple[1])]
 
-        print(self.file_size, spilt(file_size=self.file_size, parts=len(self.ports) + 1))
         self.generate_connections()
-        self.data = await asyncio.gather(
-            *(self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
-              for soc, tp in zip(
-                self.conns, spilt(file_size=self.file_size, parts=len(self.ports) + 1)
-            ))
-        )
+        self.data = [
+            asserttype(bytes, elem)
+            for elem in await asyncio.gather(
+                *(self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
+                  for soc, tp in zip(
+                    assertnotnone(self.conns),
+                    spilt(file_size=assertnotnone(self.file_size), parts=len(self.ports) + 1)
+                ))
+            )
+        ]
 
     def flush_data(self):
         os.chdir(self.output)
-        with open(self.file_name, 'wb') as f:
+        with open(assertnotnone(self.file_name), 'wb') as f:
             for d in self.data:
                 f.write(d)
 
-    def _get(self, soc: socket,
+    @staticmethod
+    def _get(soc: socket.socket,
              request: Request,
              parameters: Sequence[str] = ('',),
              *,
-             decode: bool = True) -> Union[Sequence[str], bytes]:
-        return asyncio.run(self._async_get(soc, request, parameters, decode=decode))
+             decode: bool = True) -> Optional[Union[Sequence[str], bytes]]:
+        return asyncio.run(Client._async_get(soc, request, parameters, decode=decode))
 
     @staticmethod
-    async def _async_get(soc: socket,
+    async def _async_get(soc: socket.socket,
                          request: Request,
                          parameters: Sequence[str] = ('',),
                          *,
-                         decode: bool = True) -> Union[Sequence[str], bytes]:
+                         decode: bool = True) -> Optional[Union[Sequence[str], bytes]]:
         network.send_request(soc, network.encode_parameter(request.value, *parameters))
-        data: bytes = network.get_request(soc)
-        if decode:
+        data: Optional[bytes] = network.get_request(soc)
+        if data is not None and decode:
             return network.decode_parameter(data)
         return data
