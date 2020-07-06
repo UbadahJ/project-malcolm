@@ -2,17 +2,14 @@ import builtins
 from enum import Enum
 from typing import Any
 
-Colors = Enum(
-    "Colors",
-    {
-        "ERROR": "\033[0;31m",
-        "WARNING": "\033[0;33m",
-        "DEBUG": "\033[0;37m",
-        "INFO": "\033[0;34m",
-        "SUCCESS": "\033[0;32m",
-        "DEFAULT": "\033[0m",
-    },
-)
+
+class Colors(Enum):
+    ERROR = "\033[0;31m"
+    WARNING = "\033[0;33m"
+    DEBUG = "\033[0;37m"
+    INFO = "\033[0;34m"
+    SUCCESS = "\033[0;32m"
+    DEFAULT = "\033[0m"
 
 
 def print(*objects: Any, sep: str = " ", end: str = "\n", style: str = None):
