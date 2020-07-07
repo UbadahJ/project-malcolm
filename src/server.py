@@ -93,7 +93,7 @@ def init(args: argparse.Namespace):
 
 
 def display_info():
-    global process, queue
+    global procs, queue, status
     while True:
         con.clear()
         try:
@@ -134,7 +134,7 @@ if __name__ == "__main__":
         process.start()
         procs.append((process_id, process, queue))
 
-    status = ["" for _ in procs]
+    status = ["Server {}: Status Alive".format(i) for i, _, _ in procs]
     display = mp.Process(target=display_info)
     display.start()
     while True:
@@ -143,6 +143,7 @@ if __name__ == "__main__":
             for index, (process_id, process, queue) in enumerate(procs):
                 if process_id == x:
                     _has = True
+                    queue.put_nowait("Server {}: Status DEAD".format(process_id))
                     process.terminate()
                     process.join()
                     procs.remove(procs[index])
