@@ -5,13 +5,14 @@ from itertools import groupby
 from operator import itemgetter
 from typing import List, Optional, Sequence, Tuple, Union, Any
 
-from utils import console as con, network
+from utils import network
+import console as con
 from utils.decorators import retry
 from utils.collections import flatten, first, empty
-from utils.console import print
+from console import print
 from utils.file import spilt
 from utils.network import Request
-from utils.nullsafe import notnone, optional, assertoptionaltype, asserttype
+from utils.nullsafe import notnone, optional, asserttype
 
 
 class Client:

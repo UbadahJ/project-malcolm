@@ -8,7 +8,7 @@ from time import sleep
 from typing import Optional, Sequence
 from urllib.request import urlopen
 
-from utils.console import debug
+from console import debug
 from utils.nullsafe import notnone
 
 

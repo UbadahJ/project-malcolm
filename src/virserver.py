@@ -1,9 +1,9 @@
 import datetime
 from multiprocessing import Queue
 from queue import Empty
-from typing import Optional, Sequence
+from typing import Optional
 
-import utils.console as con
+import console as con
 from utils import file, network
 from utils.network import Request
 from utils.nullsafe import notnone

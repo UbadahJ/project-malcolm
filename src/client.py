@@ -3,8 +3,9 @@
 import argparse
 import pathlib
 
-from utils import console as con, network
-from utils.console import print
+from utils import network
+import console as con
+from console import print
 from virclient import Client
 
 

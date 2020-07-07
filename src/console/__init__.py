@@ -3,7 +3,7 @@ import subprocess
 import sys
 from typing import Any, Callable
 
-import utils.fallbackconsole as c
+import console._fallback as c
 
 pretty_printing = False
 enable_debugging = True

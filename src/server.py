@@ -6,8 +6,9 @@ import pathlib
 import time
 from queue import Empty
 
-from utils import console as con, file, network
-from utils.console import print, getch
+from utils import file, network
+import console as con
+from console import print, getch
 from virserver import Server
 
 
