@@ -3,14 +3,15 @@ import os
 import socket
 from itertools import groupby
 from operator import itemgetter
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union, Any
 
 from utils import console as con, network
-from utils.collections import flatten, first
+from utils.decorators import retry
+from utils.collections import flatten, first, empty
 from utils.console import print
 from utils.file import spilt
 from utils.network import Request
-from utils.nullsafe import assertnotnone, asserttype, optional
+from utils.nullsafe import notnone, optional, assertoptionaltype, asserttype
 
 
 class Client:
@@ -33,7 +34,7 @@ class Client:
         self.conns: Optional[List[socket.socket]] = None
         self.checks: Optional[List[str]] = None
         self.file_size: Optional[int] = None
-        self.data: Optional[List[bytes]] = None
+        self.data: List[bytes]
 
         # Show launch message to user
         self.on_create()
@@ -46,11 +47,17 @@ class Client:
         # Fetch the file size from any server
         self.get_file_size()
         # Get the data from server
-        asyncio.run(self.get_data())
+        self.data = asyncio.run(self.get_data(0, notnone(self.file_size)))
         # Output data
         self.flush_data()
 
     def generate_connections(self, *, sockets: Optional[Sequence[int]] = None) -> None:
+        # Check if there are any working ports
+        # If a port is in list, it means it was working previously
+        if empty(self.ports):
+            # If no port is available, then quit
+            # TODO: Add resume here
+            quit(1)
         # Close all the existing sockets
         if self.conns is not None:
             for soc in self.conns:
@@ -75,9 +82,16 @@ class Client:
 
     async def get_checksum(self) -> None:
         self.generate_connections()
-        self.checks = [str(check) for check in flatten(await asyncio.gather(
-            *(self._async_get(soc, Request.CHECKSUM) for soc in self.conns)
-        ))]
+        self.ports, self.checks = map(list, zip(*[
+            (port, str(check))
+            for port, check in zip(self.ports, [
+                __check
+                for __check in flatten(await asyncio.gather(
+                    *(self._async_get(soc, Request.CHECKSUM) for soc in self.conns)
+                ))
+            ])
+            if check is not None
+        ]))
 
     def verify_checksum(self) -> None:
         assert self.checks is not None
@@ -91,42 +105,45 @@ class Client:
         check_selected = max(check_count, key=itemgetter(0))[1]
         # Filter the ports whose checksum doesn't match
         self.ports, self.checks = map(list, zip(*[
-            pair
-            for pair in zip(self.ports, _checks)
-            if pair[1] == check_selected
+            (port, check)
+            for port, check in zip(self.ports, _checks)
+            if check == check_selected
         ]))
 
+    @retry(AssertionError)
     def get_file_name(self):
         self.generate_connections(sockets=(0,))
         self.file_name = str(
-            assertnotnone(first(assertnotnone(self._get(self.conns[0], Request.FILE_NAME))))
+            notnone(first(notnone(self._get(self.conns[0], Request.FILE_NAME))))
         )
 
+    @retry(AssertionError)
     def get_file_size(self) -> None:
         self.generate_connections(sockets=(0,))
         self.file_size = int(
-            assertnotnone(first(assertnotnone(self._get(self.conns[0], Request.FILE_SIZE))))
+            notnone(first(notnone(self._get(self.conns[0], Request.FILE_SIZE))))
         )
 
-    async def get_data(self) -> None:
+    async def get_data(self, start: int, end: int) -> List[bytes]:
         def normalize(_tuple: Tuple[int, int]) -> Sequence[str]:
-            return [str(_tuple[0]), str(_tuple[1])]
+            return [str(start + _tuple[0]), str(start + _tuple[1])]
 
         self.generate_connections()
-        self.data = [
-            asserttype(bytes, elem)
-            for elem in await asyncio.gather(
-                *(self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
-                  for soc, tp in zip(
-                    assertnotnone(self.conns),
-                    spilt(file_size=assertnotnone(self.file_size), parts=len(self.ports) + 1)
-                ))
-            )
-        ]
+        _split: List[Tuple[int, int]] = \
+            spilt(file_size=notnone(end - start), parts=len(self.ports) + 1)
+        _data: List[Any] = list(await asyncio.gather(*(
+            self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
+            for soc, tp in zip(notnone(self.conns), _split))))
+
+        for index, seg in enumerate(_data):
+            if seg is None:
+                _data[index] = flatten(await self.get_data(*_split[index]))
+
+        return [asserttype(bytes, d) for d in _data]
 
     def flush_data(self):
         os.chdir(self.output)
-        with open(assertnotnone(self.file_name), 'wb') as f:
+        with open(notnone(self.file_name), 'wb') as f:
             for d in self.data:
                 f.write(d)
 

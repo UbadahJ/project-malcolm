@@ -6,7 +6,7 @@ from typing import Optional, Sequence
 import utils.console as con
 from utils import file, network
 from utils.network import Request
-from utils.nullsafe import assertnotnone
+from utils.nullsafe import notnone
 
 
 class Server:
@@ -29,7 +29,7 @@ class Server:
                     if soc:
                         c_soc, _ = soc.accept()
                         request, *params = network.decode_parameter(
-                            assertnotnone(network.get_request(c_soc))
+                            notnone(network.get_request(c_soc))
                         )
                         self.request = Request(request)
                         self.update()

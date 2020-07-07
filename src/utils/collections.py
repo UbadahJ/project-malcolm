@@ -1,4 +1,6 @@
-from typing import Sequence, TypeVar, Optional, List, Union
+from typing import Sequence, TypeVar, Optional, List, Union, Sized
+
+from utils.nullsafe import asserttype
 
 __T = TypeVar('__T')
 
@@ -15,6 +17,17 @@ def last(data: Sequence[__T]) -> Optional[__T]:
         return data[-1]
     except IndexError:
         return None
+
+
+def empty(data: Sequence[__T]) -> bool:
+    if isinstance(data, Sized):
+        return len(asserttype(Sized, data)) == 0
+    try:
+        for _ in data:
+            return True
+    except (TypeError, IndexError):
+        pass
+    return False
 
 
 def flatten(data: Sequence[Union[Sequence[__T], __T]]) -> Sequence[__T]:

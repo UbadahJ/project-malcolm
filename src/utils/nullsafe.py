@@ -4,7 +4,7 @@ __T1 = TypeVar('__T1')
 __T2 = TypeVar('__T2')
 
 
-def ifnoneorelse(value: Optional[__T1], onelse: __T2) -> Union[__T1, __T2]:
+def ifnone(value: Optional[__T1], onelse: __T2) -> Union[__T1, __T2]:
     """ Checks if given value is None else return other value
 
     :param value: The given value that is be checked
@@ -16,7 +16,7 @@ def ifnoneorelse(value: Optional[__T1], onelse: __T2) -> Union[__T1, __T2]:
     return onelse
 
 
-def assertnotnone(value: Optional[__T1]) -> __T1:
+def notnone(value: Optional[__T1]) -> __T1:
     """ Assert if the given value is not None
 
     :param value: the value to be asserted
@@ -37,6 +37,19 @@ def asserttype(type_: Type[__T1], value: __T2) -> __T1:
     """
     assert isinstance(value, type_)
     return value
+
+
+def assertoptionaltype(type_: Type[__T1], value: __T2) -> Optional[__T1]:
+    """ Assert the data type of given value (includes None as same data type)
+
+    :param type_: Given data type
+    :param value: Given value that is to be asserted
+    :raises AssertionError: Raise if value is not of type type_
+    :return: value which is of given type
+    """
+    if value is None:
+        return
+    return asserttype(type_, value)
 
 
 def optional(value: __T1) -> Optional[__T1]:

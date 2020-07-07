@@ -9,7 +9,7 @@ from typing import Optional, Sequence
 from urllib.request import urlopen
 
 from utils.console import debug
-from utils.nullsafe import assertnotnone
+from utils.nullsafe import notnone
 
 
 def get_local_ip() -> str:
@@ -67,16 +67,16 @@ def recv_bytes(
 ) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < size:
+        packet: Optional[bytes] = None
         try:
             packet = soc.recv(size - len(data))
         except OSError as e:
             if wait:
                 retries -= 1
-                sleep(1)
-                continue
+                sleep(0.1)
             else:
                 raise e
-        if not packet or retries <= 0:
+        if packet is None or retries <= 0:
             return None
         data.extend(packet)
     return data
@@ -92,14 +92,17 @@ def decode_parameter(param: bytes) -> Sequence[str]:
 
 def get_request(soc: socket.socket) -> Optional[bytes]:
     try:
-        size = struct.unpack("I", assertnotnone(recv_bytes(soc, 4)))
-        return bytes(assertnotnone(recv_bytes(soc, size[0])))
+        size = struct.unpack("I", notnone(recv_bytes(soc, 4)))
+        return bytes(notnone(recv_bytes(soc, size[0])))
     except (TypeError, AssertionError):
         return None
 
 
 def send_request(soc: socket.socket, param: bytes) -> None:
-    soc.sendall(struct.pack("I", len(param)) + param)
+    try:
+        soc.sendall(struct.pack("I", len(param)) + param)
+    except OSError:
+        pass
 
 
 class Request(Enum):
