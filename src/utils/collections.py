@@ -1,8 +1,9 @@
-from typing import Sequence, TypeVar, Optional, List, Union, Sized
+from typing import Sequence, TypeVar, Optional, List, Union, Sized, Any
 
 from utils.nullsafe import asserttype
 
 __T = TypeVar('__T')
+__V = TypeVar('__V')
 
 
 def first(data: Sequence[__T]) -> Optional[__T]:
@@ -28,6 +29,27 @@ def empty(data: Sequence[__T]) -> bool:
     except (TypeError, IndexError):
         pass
     return False
+
+
+def contains(sequence: List[__T], item: __V, *, recursive=False) -> bool:
+    if recursive:
+        return _contains_recursive(sequence, item)
+    for i in sequence:
+        if i == item:
+            return True
+    return False
+
+
+def _contains_recursive(sequence: List[Any], item: __V) -> bool:
+    _contains: bool = False
+    for i in sequence:
+        if isinstance(i, List):
+            _contains = _contains_recursive(i, item)
+        else:
+            _contains = i == item
+        if _contains:
+            break
+    return _contains
 
 
 def flatten(data: Sequence[Union[Sequence[__T], __T]]) -> Sequence[__T]:
