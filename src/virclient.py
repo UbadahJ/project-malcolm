@@ -3,16 +3,16 @@ import os
 import socket
 from itertools import groupby
 from operator import itemgetter
-from typing import List, Optional, Sequence, Tuple, Union, Any
+from typing import List, Optional, Sequence, Tuple, Union, MutableSequence
 
-from utils import network
 import console as con
-from utils.decorators import retry
-from utils.collections import flatten, first, empty
 from console import print
+from utils import network
+from utils.collections import flatten, first, empty
+from utils.decorators import retry
 from utils.file import spilt
 from utils.network import Request
-from utils.nullsafe import notnone, optional, asserttype
+from utils.nullsafe import notnone, optional, asserttype, assertsequencetype
 
 
 class Client:
@@ -32,10 +32,12 @@ class Client:
         self.ports: List[str] = ports
         self.resume: bool = resume
         self.file_name: Optional[str] = None
-        self.conns: Optional[List[socket.socket]] = None
-        self.checks: Optional[List[str]] = None
+        self.conns: Optional[Sequence[socket.socket]] = None
+        self.checks: Optional[Sequence[str]] = None
         self.file_size: Optional[int] = None
-        self.data: List[bytes]
+        self.data_unfinished: \
+            Optional[MutableSequence[Tuple[Tuple[int, int], Optional[bytes]]]] = None
+        self.data: Optional[Sequence[bytes]] = None
 
         # Show launch message to user
         self.on_create()
@@ -48,7 +50,7 @@ class Client:
         # Fetch the file size from any server
         self.get_file_size()
         # Get the data from server
-        self.data = asyncio.run(self.get_data(0, notnone(self.file_size)))
+        asyncio.run(self.get_data())
         # Output data
         self.flush_data()
 
@@ -64,7 +66,7 @@ class Client:
             for soc in self.conns:
                 soc.close()
         # Check if only selected sockets needs to be recreated
-        _conns: Optional[List[Optional[socket.socket]]] = \
+        _conns: Optional[MutableSequence[Optional[socket.socket]]] = \
             None if self.conns is None else [optional(c) for c in self.conns]
         if _conns is None or sockets is None:
             # Recreate all the sockets
@@ -125,22 +127,39 @@ class Client:
             notnone(first(notnone(self._get(self.conns[0], Request.FILE_SIZE))))
         )
 
-    async def get_data(self, start: int, end: int) -> List[bytes]:
-        def normalize(_tuple: Tuple[int, int]) -> Sequence[str]:
+    async def get_data(self) -> None:
+        def normalize(_tuple: Tuple[int, int], start: int = 0) -> Sequence[str]:
             return [str(start + _tuple[0]), str(start + _tuple[1])]
 
-        self.generate_connections()
-        _split: List[Tuple[int, int]] = \
-            spilt(file_size=notnone(end - start), parts=len(self.ports) + 1)
-        _data: List[Any] = list(await asyncio.gather(*(
-            self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
-            for soc, tp in zip(notnone(self.conns), _split))))
+        async def fetch(start: int, end: int) \
+                -> MutableSequence[Tuple[Tuple[int, int], Optional[bytes]]]:
+            self.generate_connections()
+            _split: Sequence[Tuple[int, int]] = \
+                spilt(file_size=notnone(end - start), parts=len(self.ports) + 1)
+            _data: Sequence[Optional[bytes]] = [
+                asserttype(bytes, data) for data in
+                await asyncio.gather(*(
+                    self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
+                    for soc, tp in zip(notnone(self.conns), _split)
+                ))
+            ]
+            return list(zip(_split, _data))
 
-        for index, seg in enumerate(_data):
-            if seg is None:
-                _data[index] = flatten(await self.get_data(*_split[index]))
+        async def verify(list_: MutableSequence[Tuple[Tuple[int, int], Optional[bytes]]]) \
+                -> Sequence[bytes]:
+            for i, ((start, end), seg) in enumerate(list_):
+                if seg is None:
+                    list_[i] = (
+                        (start, end),
+                        bytes(b"".join(
+                            assertsequencetype(bytes,
+                                               flatten(await verify(await fetch(start, end))))
+                        ))
+                    )
+            return [notnone(seg) for (_, _), seg in list_]
 
-        return [asserttype(bytes, d) for d in _data]
+        self.data_unfinished = await fetch(0, notnone(self.file_size))
+        self.data = await verify(self.data_unfinished)
 
     def flush_data(self):
         os.chdir(self.output)
