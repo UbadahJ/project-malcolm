@@ -1,4 +1,4 @@
-from typing import Union, Optional, TypeVar, Type
+from typing import Union, Optional, TypeVar, Type, Sequence
 
 __T1 = TypeVar('__T1')
 __T2 = TypeVar('__T2')
@@ -37,6 +37,18 @@ def asserttype(type_: Type[__T1], value: __T2) -> __T1:
     """
     assert isinstance(value, type_)
     return value
+
+
+def assertsequencetype(type_: Type[__T1], sequence: Sequence[__T2]) -> Sequence[__T1]:
+    """ Assert data type for every element in a sequence
+
+    :param type_: Given data type
+    :param sequence: Given sequence of some data type
+    :raises AssertionError: Raise if value is not of type type_
+    :return: Sequence with values of given data type
+    """
+    assert isinstance(sequence, Sequence)
+    return [asserttype(type_, item) for item in sequence]
 
 
 def assertoptionaltype(type_: Type[__T1], value: __T2) -> Optional[__T1]:
