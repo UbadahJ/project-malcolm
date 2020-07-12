@@ -16,6 +16,17 @@ from utils.nullsafe import notnone, optional, asserttype, assertsequencetype
 
 
 class Client:
+    output: str
+    address: str
+    ports: List[str]
+    resume: bool
+    file_name: str
+    conns: Sequence[socket.socket]
+    checks: Sequence[str]
+    file_size: int
+    data_unfinished: MutableSequence[Tuple[Tuple[int, int], Optional[bytes]]]
+    data: Sequence[bytes]
+
     def on_create(self) -> None:
         con.clear()
         con.box_print("Project Malcolm")
@@ -27,17 +38,10 @@ class Client:
         con.getch()
 
     def __init__(self, *, address: str, ports: List[str], output: str, resume: bool):
-        self.output: str = output
-        self.address: str = address
-        self.ports: List[str] = ports
-        self.resume: bool = resume
-        self.file_name: Optional[str] = None
-        self.conns: Optional[Sequence[socket.socket]] = None
-        self.checks: Optional[Sequence[str]] = None
-        self.file_size: Optional[int] = None
-        self.data_unfinished: \
-            Optional[MutableSequence[Tuple[Tuple[int, int], Optional[bytes]]]] = None
-        self.data: Optional[Sequence[bytes]] = None
+        self.output = output
+        self.address = address
+        self.ports = ports
+        self.resume = resume
 
         # Show launch message to user
         self.on_create()
