@@ -142,3 +142,6 @@ tmp/
 
 # MyPY cache
 .mypy_cache/*
+
+# SonarLint cache
+.idea/sonarlint/
