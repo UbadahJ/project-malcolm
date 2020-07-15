@@ -57,7 +57,6 @@ def create_connection(ip: str, port: int) -> Optional[socket.socket]:
     try:
         soc.connect((ip, port))
     except ConnectionRefusedError as e:
-        debug(e)
         return None
     return soc
 
@@ -76,7 +75,7 @@ def recv_bytes(
                 sleep(0.1)
             else:
                 raise e
-        if packet is None or retries <= 0:
+        if packet is None or packet == b'' or retries <= 0:
             return None
         data.extend(packet)
     return data
