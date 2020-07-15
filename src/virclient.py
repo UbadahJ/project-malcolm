@@ -203,7 +203,7 @@ class Client:
                 # Since there is no need to create resume file otherwise
                 if data is not None:
                     save_resume_data = True
-        except (NameError, ValueError):
+        except (NameError, ValueError, AttributeError):
             # Exists if the variable doesn't exists or data is incompatible
             pass
         # If there is data
