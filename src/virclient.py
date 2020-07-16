@@ -4,13 +4,13 @@ import socket
 from itertools import groupby
 from json import dump
 from operator import itemgetter
-from typing import List, Optional, Sequence, Tuple, Union, MutableSequence
+from typing import List, Optional, Sequence, Tuple, Union, MutableSequence, Callable
 
 import console as con
 from console import print
-from serialization.client import dump, ClientInfo
+from serialization.client import dump, ClientInfo, load
 from utils import network
-from utils.collections import flatten, first, empty
+from utils.collections import flatten, first, empty, flatten_bytes
 from utils.decorators import retry
 from utils.file import spilt
 from utils.network import Request
@@ -28,6 +28,7 @@ class Client:
     file_size: int
     data_unfinished: MutableSequence[Tuple[Tuple[int, int], Optional[bytes]]]
     data: Sequence[bytes]
+    resume_data: Optional[ClientInfo]
 
     def on_create(self) -> None:
         con.clear()
@@ -44,20 +45,29 @@ class Client:
         self.address = address
         self.ports = ports
         self.resume = resume
+        self.resume_data = None
+        if resume:
+            with open('resume.pyb', 'rb') as f:
+                self.resume_data = load(f)
 
         # Show launch message to user
         self.on_create()
         # Get the checksum of the files
+        print('Fetching checksums ...')
         asyncio.run(self.get_checksum())
         # Verify files and remove the unmatched servers
         self.verify_checksum()
         # Fetch the file name from any server
+        print('Getting filename ... ')
         self.get_file_name()
         # Fetch the file size from any server
+        print('Getting filesize ...')
         self.get_file_size()
         # Get the data from server
+        print('Fetching data ...')
         asyncio.run(self.get_data())
         # Output data
+        print('Flushing data ...')
         self.flush_data()
         print('Done')
 
@@ -95,17 +105,25 @@ class Client:
             quit(1)
 
     async def get_checksum(self) -> None:
+        counter: int = 0
+
+        def _print(start, end, size):
+            nonlocal counter
+            counter += 1
+            print(f'\rProgress: {counter}/{len(self.ports)}', end='')
+
         self.generate_connections()
         self.ports, self.checks = map(list, zip(*[
             (port, str(check))
             for port, check in zip(self.ports, [
                 __check
                 for __check in flatten(await asyncio.gather(
-                    *(self._async_get(soc, Request.CHECKSUM) for soc in self.conns)
+                    *(self._async_get(soc, Request.CHECKSUM, progress=_print) for soc in self.conns)
                 ))
             ])
             if check is not None
         ]))
+        print()  # Required due to \r in _print
 
     def verify_checksum(self) -> None:
         assert self.checks is not None
@@ -123,6 +141,15 @@ class Client:
             for port, check in zip(self.ports, _checks)
             if check == check_selected
         ]))
+        # Check if there is resume data
+        if self.resume_data is not None:
+            # Match the checksum
+            for check in self.checks:
+                if check != self.resume_data.checks:
+                    print('The resume data checksum does not match with server sent checksum')
+                    print(f'{check} != {self.resume_data.checks}')
+                    print('Terminating ...')
+                    quit(1)
 
     @retry(AssertionError)
     def get_file_name(self):
@@ -139,6 +166,16 @@ class Client:
         )
 
     async def get_data(self) -> None:
+        total: int = 0
+
+        def _print(start, end, size):
+            nonlocal total
+            total += size
+            print(f'\rProgress: {con.pretty_size(total)} / {con.pretty_size(self.file_size)},'
+                  f'{con.pretty_size(size)}ps, Chunk[{start}/{end}]',
+                  sep=' ',
+                  end='')
+
         def normalize(_tuple: Tuple[int, int], start: int = 0) -> Sequence[str]:
             # Return the data return by file.split to str to be sent as parameter
             return [str(start + _tuple[0]), str(start + _tuple[1])]
@@ -149,14 +186,15 @@ class Client:
             self.generate_connections()
             # Split the data into parts for connections
             _split: Sequence[Tuple[int, int]] = \
-                spilt(file_size=notnone(end - start), parts=len(self.ports) + 1)
+                spilt(file_size=notnone(end - start), parts=len(self.ports))
             # Fetch the data for each connection
             _data: Sequence[Optional[bytes]] = [
                 # Assert if the type of element is bytes or None
                 assertoptionaltype(bytes, data) for data in
                 # Use high-level co-routine to fetch data
                 await asyncio.gather(*(
-                    self._async_get(soc, Request.TRANSFER, normalize(tp), decode=False)
+                    self._async_get(soc, Request.TRANSFER, normalize(tp, start), progress=_print,
+                                    decode=False)
                     for soc, tp in zip(notnone(self.conns), _split)
                 ))
             ]
@@ -177,7 +215,7 @@ class Client:
                                 # Recursive call itself until the content has been resolved
                                 # Or all the connections have been refused
                                 assertsequencetype(
-                                    bytes, flatten(await verify(await fetch(start, end)))
+                                    bytes, flatten_bytes(await verify(await fetch(start, end))),
                                 )
                             ))
                         )
@@ -188,10 +226,16 @@ class Client:
                     return []
             return [notnone(seg) for (_, _), seg in list_]
 
-        # Store the data in unverified (error-prone) data in tmp variable
-        self.data_unfinished = await fetch(0, notnone(self.file_size))
+        # Check if there is resume data
+        if self.resume_data is not None:
+            # Load the resume data into tmp variable
+            self.data_unfinished = self.resume_data.data
+        else:
+            # Store the data in unverified (error-prone) data in tmp variable
+            self.data_unfinished = await fetch(0, notnone(self.file_size))
         # Verify the data integrity
         self.data = await verify(self.data_unfinished)
+        print()
 
     def dump_resume(self):
         # Check if the data exists
@@ -217,6 +261,8 @@ class Client:
             print('No data was fetched ...')
 
     def flush_data(self):
+        if self.resume_data is not None:
+            os.remove('resume.pyb')
         os.chdir(self.output)
         with open(notnone(self.file_name), 'wb') as f:
             for d in self.data:
@@ -235,13 +281,10 @@ class Client:
                          request: Request,
                          parameters: Sequence[str] = ('',),
                          *,
+                         progress: Callable[[int, int, int], None] = None,
                          decode: bool = True) -> Optional[Union[Sequence[str], bytes]]:
         network.send_request(soc, network.encode_parameter(request.value, *parameters))
-        data: Optional[bytes] = network.get_request(soc, progress=print_async)
+        data: Optional[bytes] = network.get_request(soc, progress=progress)
         if data is not None and decode:
             return network.decode_parameter(data)
         return data
-
-
-def print_async(received: int, total: int, size: int):
-    print(f'Progress => {received}/{total} [{size}]')

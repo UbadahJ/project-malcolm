@@ -1,7 +1,7 @@
 import platform
 import subprocess
 import sys
-from typing import Any, Callable
+from typing import Any, Callable, Tuple, Sequence
 
 import console._fallback as c
 
@@ -28,6 +28,24 @@ def box_print(*objects: Any, chr: str = "*", sep: str = " ") -> None:
 def clear() -> None:
     subprocess.Popen("cls" if platform.system() == "Windows" else "clear", shell=True).communicate()
     sys.stdout.flush()
+
+
+UNITS_MAPPING: Sequence[Tuple[int, str]] = [
+    (1 << 50, ' PB'),
+    (1 << 40, ' TB'),
+    (1 << 30, ' GB'),
+    (1 << 20, ' MB'),
+    (1 << 10, ' KB'),
+    (1, ' B'),
+]
+
+
+def pretty_size(_bytes: int, units: Sequence[Tuple[int, str]] = UNITS_MAPPING) -> str:
+    for _factor, _suffix in units:
+        if not _bytes >= _factor:
+            continue
+        amount = int(_bytes / _factor)
+        return str(amount) + _suffix
 
 
 def _find_getch() -> Callable:
