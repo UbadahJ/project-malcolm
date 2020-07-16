@@ -1,6 +1,6 @@
 import unittest
 
-from utils.collections import contains, first, last, empty, flatten
+from utils.collections import contains, first, last, empty, flatten, flatten_bytes
 
 
 class TestCollections(unittest.TestCase):
@@ -34,6 +34,9 @@ class TestCollections(unittest.TestCase):
         self.assertEqual(flatten(['x', 'y', 'z']), ['x', 'y', 'z'])
         self.assertEqual(flatten([]), [])
 
+    def test_flatten_bytes(self):
+        self.assertEqual(flatten_bytes([b'Testing', [b'O', b'n', b'e'], b'Two', b'Three']),
+                         ([b'Testing', b'One', b'Two', b'Three']))
 
 if __name__ == '__main__':
     unittest.main()

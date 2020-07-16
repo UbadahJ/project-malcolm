@@ -1,4 +1,4 @@
-from typing import Sequence, TypeVar, Optional, List, Union, Sized, Any
+from typing import Sequence, TypeVar, Optional, List, Union, Sized, Any, Tuple
 
 from utils.nullsafe import asserttype
 
@@ -55,8 +55,18 @@ def _contains_recursive(sequence: List[Any], item: __V) -> bool:
 def flatten(data: Sequence[Union[Sequence[__T], __T]]) -> Sequence[__T]:
     _list: List[__T] = list()
     for item in data:
-        if isinstance(item, Sequence):
-            _list.extend(item)
+        if isinstance(item, (List, Tuple)):
+            _list.extend(flatten(item))
+        else:
+            _list.append(item)
+    return _list
+
+
+def flatten_bytes(data: Sequence[Union[Sequence[bytes], bytes]]) -> Sequence[bytes]:
+    _list: List[bytes] = list()
+    for item in data:
+        if isinstance(item, (List, Tuple)):
+            _list.append(b''.join(item))
         else:
             _list.append(item)
     return _list
