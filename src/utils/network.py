@@ -5,7 +5,7 @@ import struct
 import subprocess
 from enum import Enum
 from time import sleep
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Callable, Tuple
 from urllib.request import urlopen
 
 from console import debug
@@ -62,13 +62,19 @@ def create_connection(ip: str, port: int) -> Optional[socket.socket]:
 
 
 def recv_bytes(
-        soc: socket.socket, size: int, wait: bool = True, retries: int = 3
+        soc: socket.socket,
+        size: int,
+        wait: bool = True,
+        retries: int = 3,
+        progress: Optional[Callable[[int, int, int], None]] = None
 ) -> Optional[bytearray]:
     data = bytearray()
     while len(data) < size:
         packet: Optional[bytes] = None
         try:
             packet = soc.recv(size - len(data))
+            if progress is not None:
+                progress(len(data), size, len(packet))
         except OSError as e:
             if wait:
                 retries -= 1
@@ -89,10 +95,11 @@ def decode_parameter(param: bytes) -> Sequence[str]:
     return param.decode("utf-8").split("::")
 
 
-def get_request(soc: socket.socket) -> Optional[bytes]:
+def get_request(soc: socket.socket,
+                progress: Optional[Callable[[int, int, int], None]] = None) -> Optional[bytes]:
     try:
         size = struct.unpack("I", notnone(recv_bytes(soc, 4)))
-        return bytes(notnone(recv_bytes(soc, size[0])))
+        return bytes(notnone(recv_bytes(soc, size[0], progress=progress)))
     except (TypeError, AssertionError):
         return None
 
