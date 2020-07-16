@@ -60,7 +60,7 @@ def asserttype(type_: Type[__T1], value: __T2) -> __T1:
     :raises AssertionError: Raise if value is not of type type_
     :return: value which is of given type
     """
-    assert isinstance(value, type_)
+    assert isinstance(value, type_), f'{type(value)} != {type_}'
     return value
 
 
