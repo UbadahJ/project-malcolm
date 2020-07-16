@@ -1,7 +1,32 @@
-from typing import Union, Optional, TypeVar, Type, Sequence
+from functools import wraps
+from typing import Union, Optional, TypeVar, Type, Sequence, Callable, Any
 
 __T1 = TypeVar('__T1')
 __T2 = TypeVar('__T2')
+
+
+def ifnotnone(value: Optional[__T1], func: Callable[..., __T2]) -> Callable[..., Optional[__T2]]:
+    """ Execute the given function if the given is not None
+
+    Designed to be a replica ?. operator in Kotlin language. Also can be used as a decorator
+    based on variable value may or may not execute
+
+    Example:
+
+    file?.open("tmp.txt") => ifnotnone(file, file.open)("tmp.txt")
+
+    :param value: The given value to be tested
+    :param func: The function that will be executed
+    :return: The function if the value is not None or a function that returns None on call
+    """
+
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Optional[__T2]:
+        if value is not None:
+            return func(*args, **kwargs)
+        return (lambda: None)()
+
+    return wrapper
 
 
 def ifnone(value: Optional[__T1], onelse: __T2) -> Union[__T1, __T2]:
