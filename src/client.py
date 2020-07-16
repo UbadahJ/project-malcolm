@@ -86,7 +86,7 @@ def verify(args: argparse.Namespace):
         if args.resume:
             # Check if resume.json exists
             print("Validating resume data ... ", end="")
-            assert pathlib.Path('resume.json').exists()
+            assert pathlib.Path('resume.pyb').exists()
             con.success("OK")
         return args
     except AssertionError:

@@ -2,13 +2,13 @@ import asyncio
 import os
 import socket
 from itertools import groupby
-from json import dumps
+from json import dump
 from operator import itemgetter
 from typing import List, Optional, Sequence, Tuple, Union, MutableSequence
 
 import console as con
 from console import print
-from serialization.client import dump_hook
+from serialization.client import dump, ClientInfo
 from utils import network
 from utils.collections import flatten, first, empty
 from utils.decorators import retry
@@ -59,6 +59,7 @@ class Client:
         asyncio.run(self.get_data())
         # Output data
         self.flush_data()
+        print('Done')
 
     def generate_connections(self, *, sockets: Optional[Sequence[int]] = None) -> None:
         # Close all the existing sockets
@@ -209,9 +210,9 @@ class Client:
         # If there is data
         if save_resume_data:
             print('Saving resume data ...')
-            with open('resume.json', 'w') as f:
+            with open('resume.pyb', 'wb') as f:
                 # Dump the data using serialization hook
-                f.write(dumps(self, default=dump_hook))
+                dump(ClientInfo(first(self.checks), self.data_unfinished), f)
         else:
             print('No data was fetched ...')
 
@@ -236,7 +237,11 @@ class Client:
                          *,
                          decode: bool = True) -> Optional[Union[Sequence[str], bytes]]:
         network.send_request(soc, network.encode_parameter(request.value, *parameters))
-        data: Optional[bytes] = network.get_request(soc)
+        data: Optional[bytes] = network.get_request(soc, progress=print_async)
         if data is not None and decode:
             return network.decode_parameter(data)
         return data
+
+
+def print_async(received: int, total: int, size: int):
+    print(f'Progress => {received}/{total} [{size}]')
