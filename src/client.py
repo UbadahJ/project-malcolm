@@ -82,6 +82,12 @@ def verify(args: argparse.Namespace):
         print("Validating directory ... ", end="")
         assert pathlib.Path(args.output).is_dir()
         con.success("OK")
+        # Check if resume flag is enabled
+        if args.resume:
+            # Check if resume.json exists
+            print("Validating resume data ... ", end="")
+            assert pathlib.Path('resume.json').exists()
+            con.success("OK")
         return args
     except AssertionError:
         con.error("FAILED")
