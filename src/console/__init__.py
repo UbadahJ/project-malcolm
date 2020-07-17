@@ -41,11 +41,12 @@ UNITS_MAPPING: Sequence[Tuple[int, str]] = [
 
 
 def pretty_size(_bytes: int, units: Sequence[Tuple[int, str]] = UNITS_MAPPING) -> str:
+    amount: str = '0B'
     for _factor, _suffix in units:
         if not _bytes >= _factor:
             continue
-        amount = int(_bytes / _factor)
-        return str(amount) + _suffix
+        amount = str(round(_bytes / _factor, 2)) + _suffix
+    return amount
 
 
 def _find_getch() -> Callable:

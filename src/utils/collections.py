@@ -65,7 +65,7 @@ def flatten(data: Sequence[Union[Sequence[__T], __T]]) -> Sequence[__T]:
 def flatten_bytes(data: Sequence[Union[Sequence[bytes], bytes]]) -> Sequence[bytes]:
     _list: List[bytes] = list()
     for item in data:
-        if isinstance(item, (List, Tuple)):
+        if isinstance(item, Sequence) and not isinstance(item, bytes):
             _list.append(b''.join(item))
         else:
             _list.append(item)
